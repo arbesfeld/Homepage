@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <h1> Connect.ejs </h1>
+</head>
+<body>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    window.ondevicemotion = function(event) {
+      var xVal = event.accelerationIncludingGravity.x;
+      var yVal = event.accelerationIncludingGravity.y;
+      console.log("xVal: " + xVal + " yVal: " + yVal);
+      socket.emit('phone-motion', {
+          id: id,
+        xVal: xVal,
+        yVal: yVal });
+    }
+
+    var id = <%- JSON.stringify(idn) %>;
+    console.log(id);
+
+    var socket = io.connect();
+
+    socket.on('connect', function () {
+      socket.emit('phone-join', { id: id } ); // just connected, send your id
+      console.log('connected');
+    });
+
+    socket.on('server-joinResponse', function(data) {
+      if (data.id == id) {
+        console.log("Server has confirmed that we are connected.");
+      } else {
+        console.log("Not out server has sent a message.");
+      }
+    });
+  </script>
+</body>
+</html>
