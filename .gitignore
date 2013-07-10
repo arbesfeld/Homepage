@@ -11,4 +11,5 @@ pids
 logs
 results
 
+sftp-config.json
 npm-debug.log
