@@ -1,10 +1,8 @@
-var validIds = {};
-
 var express = require('express'),
     app = express(),
     server = require('http').createServer(app),
     io = require('socket.io').listen(server),
-    site = require('./site')(validIds);
+    site = require('./site')(io);
 
 server.listen(3000);
 
@@ -22,25 +20,7 @@ app.use(express.static(__dirname + '/public'));
 // General
 
 app.get('/', site.index);
+app.get('/tilt', site.tiltGame);
+app.get('/tilt/:id', site.tiltGameClient);
 app.get('/favicon.ico', site.icon);
-app.get('/:id', site.load);
 
-// Sockets
-
-io.sockets.on('connection', function (socket) {
-  // received when a phone joins for the first time
-  socket.on('phone-join', function (data) {
-    console.log('Received client response from ' + data.id);
-    io.sockets.emit('server-join', data);
-  });
-
-  // the website confirms the phone
-  socket.on('web-joinResponse', function (data) {
-    console.log('Received website response from ' + data.id);
-    io.sockets.emit('server-joinResponse', data);
-  });
-  socket.on('phone-motion', function (data) {
-    console.log('Received client motion from ' + data.id);
-    io.sockets.emit('server-motion', data);
-  });
-});

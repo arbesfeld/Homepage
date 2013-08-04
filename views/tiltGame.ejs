@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <h1> Tilt Game </h1>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/tilt/Game.js"></script>
+  <script src="/js/webgl/DAGNode.js"></script>
+  <script src="/js/webgl/Mesh.js"></script>
+  <script src="/js/webgl/webgl-utils.js"></script>
+  <script src="/js/webgl/webgl-debug.js"></script>
+  <script src="/js/webgl/vector-math.js"></script>
+</head>
+<body>
+  <canvas id='c' height="400" width="400">Canvas Not Supported</canvas>
+  <p> <%= idn %> </p>
+  <script>
+    var id = <%- JSON.stringify(idn) %>;
+
+    var socket = io.connect();
+
+    var game = new Game();
+    game.init();
+    game.start();
+    // A phone has just connected.
+    socket.on('server-join', function(data) {
+      if (data.id == id) {
+        game.start();
+        console.log("Hello new client!");
+        socket.emit('web-joinResponse', data);
+      } else {
+        console.log("Not a new client.");
+      }
+    });
+
+    // Motion has been received.
+    socket.on('server-motion', function(data) {
+      if (data.id == id) {
+        console.log("Motion: " + data.xVal + " " + data.yVal);
+      } else {
+        console.log("Motion from a non-client.");
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,4 +1,6 @@
-SocketsWebGL
-============
+# My personal homepage. #
+=====================
 
-Use phone accelerometer to control browser WebGL content
+## Works in progress: ##
+
+* _/tilt_ Use phone accelerometer to control browser WebGL content.
