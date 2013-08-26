@@ -8,6 +8,7 @@ function Mesh() {
         program.mMatrixUniform = gl.getUniformLocation(program, 'uMMatrix');
         program.pMatrixUniform = gl.getUniformLocation(program, 'uPMatrix');
         program.vMatrixUniform = gl.getUniformLocation(program, 'uVMatrix');
+        program.nMatrixUniform = gl.getUniformLocation(program, 'uNMatrix');
         // program.uDiffuseSampler = gl.getUniformLocation(program, 'uDiffuseSampler');
         // program.uEmissiveSampler = gl.getUniformLocation(program, 'uEmissiveSampler');
         if (!--this.materialsToLoad) {
@@ -82,9 +83,13 @@ function Mesh() {
     };
 
     this.setMatrixUniforms = function(program) {
-        gl.uniformMatrix4fv(program.mMatrixUniform, false, modelMatrix().d);
-        gl.uniformMatrix4fv(program.pMatrixUniform, false, projectionMatrix().d);
-        gl.uniformMatrix4fv(program.vMatrixUniform, false, viewMatrix().d);
+        gl.uniformMatrix4fv(program.mMatrixUniform, false, modelMatrix());
+        gl.uniformMatrix4fv(program.pMatrixUniform, false, projectionMatrix());
+        gl.uniformMatrix4fv(program.vMatrixUniform, false, viewMatrix());
+
+        var normalMatrix = mat4.invert(mat4.create(), modelMatrix());
+        mat4.transpose(normalMatrix, normalMatrix);
+        gl.uniformMatrix4fv(program.nMatrixUniform, false, normalMatrix);
     };
 
     this.draw = function() {

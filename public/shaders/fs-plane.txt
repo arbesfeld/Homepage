@@ -1,9 +1,9 @@
 precision mediump float;
 
 varying vec4 vWorldSpaceNormal;
+varying vec3 vLighting;
 
 void main() {
-    float diff = dot(vec3(0,0,1), vWorldSpaceNormal.xyz);
-    diff *= 0.8;
-    gl_FragColor = vec4(diff, diff, 0, 1);
+    vec3 color = vec3(0.6, 0.0, 0.2);
+    gl_FragColor = vec4(color.xyz * vLighting, 1);
 }

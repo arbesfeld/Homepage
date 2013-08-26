@@ -52,6 +52,7 @@ function setupSocket(io) {
       console.log('Received website response from ' + data.id);
       io.sockets.emit('server-joinResponse', data);
     });
+
     socket.on('phone-motion', function (data) {
       console.log('Received client motion from ' + data.id);
       io.sockets.emit('server-motion', data);

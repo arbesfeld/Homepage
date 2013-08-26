@@ -1,11 +1,12 @@
 function DAGNode(ch) {
-  this.local = new Matrix4x3();
+  this.local = mat4.create();
   this.children = ch ? ch : [];
 }
 
 DAGNode.prototype = {
   draw : function() {
-    pushModelMatrix().multiply(this.local);
+    var top = pushModelMatrix();
+    mat4.multiply(top, top, this.local);
     for (var c in this.children) {
         this.children[c].draw();
     }
