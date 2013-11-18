@@ -21,7 +21,7 @@ module.exports = function(io) {
       var id = makeid();
       validIds[id] = true;
       console.log(JSON.stringify(validIds));
-      res.render('tiltGame', { idn: id });
+      res.render('tilt-game/tiltGame', { idn: id });
     },
 
     tiltGameClient: function(req, res) {
@@ -31,7 +31,7 @@ module.exports = function(io) {
       } else {
         console.log(id + " is invalid");
       }
-      res.render('tiltGameClient', { idn : id });
+      res.render('tilt-game/tiltGameClient', { idn : id });
     },
 
     icon: function(req, res) {
