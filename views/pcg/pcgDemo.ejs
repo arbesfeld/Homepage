@@ -1,0 +1,59 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Demo</title>
+  <script src="js/jquery-1.7.2.min.js"></script>
+  <script src="js/three.min.js"></script>
+  <script src="js/sylvester.src.js"></script>
+  <script src="js/glUtils.js"></script>
+  <script src="pcg/main.js"></script>
+  <script src="pcg/parser.js"></script>
+  <script src="pcg/default-env.js"></script>
+  <script src="pcg/Scene.js"></script>
+</head>
+<body>
+
+<textarea id="input" style="width:700px; height:300px;">
+</textarea>
+
+<input id="submitbutton" type="button" value="Run" />
+
+<div id="console" style="width:700px; height:400px; border: solid 1px;"></div>
+
+<div id="container" style="width:700px; height:500px; background-color: #eee;"></div>
+
+<script>
+
+// Utility function to log messages
+var log_console = function(msg) {
+    $('#console').append('<p>' + msg + '</p>');
+};
+
+var scene = new Scene();
+
+// After page load
+$(function() {
+    $('#submitbutton').click(function() {
+        var user_text = $('#input').val() + "\n";
+        $('#console').html('');
+        try {
+            scene.init();
+            var parsed = PCG.parse(user_text);
+            try {
+                var result = evalStatements(parsed, defaultEnv());
+                log_console(result);
+                scene.draw();
+            }
+            catch(e) {
+                log_console('Eval Error: ' + e);
+            }
+        }
+        catch(e) {
+            log_console('Parse Error: ' + e);
+        }
+    });
+});
+</script>
+
+</body>
+</html>

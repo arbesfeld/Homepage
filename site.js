@@ -17,6 +17,10 @@ module.exports = function(io) {
       res.render('index');
     },
 
+    pcgDemo: function(req, res) {
+      res.render('pcg/pcgDemo');
+    },
+
     tiltGame: function(req, res) {
       var id = makeid();
       validIds[id] = true;

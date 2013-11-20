@@ -1,0 +1,188 @@
+{ var indentStack = [], indent = ""; }
+
+start
+  = blank* INDENT? lines:( blank / line )*
+    { return lines; }
+
+EOL
+  = "\r\n" / "\n" / "\r"
+WS = " "*
+
+/**
+ *  #indentation
+ *  Handle indentation levels.
+ */
+
+line
+  = SAMEDENT statement:statement EOL
+    children:( b:blank* INDENT c:( blank / line )* DEDENT { return b.concat(c); })?
+    { return {statement:statement, children: children === "" ? [] : children}; }
+
+blank
+  = [ \t]* EOL
+    { return undefined; }
+
+SAMEDENT
+  = i:[ \t]* &{ return i.join("") === indent; }
+
+INDENT
+  = i:[ \t]+ &{ return i.length > indent.length; }
+    { indentStack.push(indent); indent = i.join(""); pos = offset; }
+
+DEDENT
+  = { indent = indentStack.pop(); }
+
+/**
+ *  #statements
+ *  functions, etc
+ */
+
+statement
+    =
+    // assignment
+      v:identifier WS "=" WS expr:expression
+        { return { tag:"=", left:v, right:expr }; }
+
+    // initializion
+    / "set " WS v:identifier WS expr:expression
+        { return { tag:"set", left:v, right:expr }; }
+
+    // comments
+    / "<3" [^\n]* { return undefined; }
+
+    // function()
+    / "function " WS v:identifier "(" WS ")"
+        { return { tag:"function", name:v, args:[]}; }
+
+    // function(args)
+    / "function " WS v:identifier WS "(" WS args:ident_list WS ")"
+        { return { tag:"function", name:v, args:args }; }
+
+    // if
+    / "if " WS expr:expression
+        { return { tag:"if", expr:expr}; }
+
+    // loop
+    / "loop " WS v:identifier WS start:expression WS end:expression
+        { return { tag:"loop", v:v, start:start, end:end}; }
+
+    // repeat
+    / "repeat " WS expr:expression
+        { return { tag:"repeat", expr:expr}; }
+
+    // return
+    / "return " WS expr:expression
+        { return { tag:"return", body:expr}; }
+
+    // transform
+    / "transform " WS exprs:(expr:expression WS {return expr;} )+
+        { return { tag:"transform", exprs:exprs}; }
+
+    // translate
+    / "translate " WS x:expression WS y:expression WS z:expression
+        { return { tag:"translate", xExpr:x, yExpr:y, zExpr:z }; }
+
+    // scale
+    / "scale " WS x:expression WS y:expression WS z:expression
+        { return { tag:"scale", xExpr:x, yExpr:y, zExpr:z }; }
+
+    // rotate
+    / "rotate " WS x:expression WS y:expression WS z:expression
+        { return { tag:"rotate", xExpr:x, yExpr:y, zExpr:z }; }
+
+    // sphere q1 q2
+    / "sphere " WS q1:expression WS q2:expression
+        { return { tag:"sphere", q1:q1, q2:q2 }; }
+
+    // generic expression
+    / expr:expression
+        { return { tag:"ignore", body:expr }; }
+
+comma_identifier = "," WS v:identifier
+        { return v; }
+
+ident_list
+    = first:identifier rest:comma_identifier*
+        { return [first].concat(rest); }
+/**
+ *  #expressions
+ *  Expresions and comparisons.
+ */
+
+expression
+    = expr:comparative
+        { return expr; }
+
+COMP_OP = "<=" / ">=" / "!=" / "==" / "<" / ">"
+
+comparative
+    = left:additive WS op:COMP_OP WS right:comparative
+        { return { tag: op, left:left, right:right }; }
+    / additive
+
+ADDITIVE_OP = "+" / "-"
+
+additive
+    = left:multiplicative WS op:ADDITIVE_OP WS right:additive
+        { return { tag:op, left:left, right:right }; }
+    / multiplicative
+
+MULT_OP = "*" / "/"
+
+multiplicative
+    = left:power WS op:MULT_OP WS right:multiplicative
+        { return { tag:op, left:left, right:right }; }
+    / power
+
+power
+    = left:primary WS "^" WS right:power
+        { return {tag:"^", left:left, right:right}; }
+    / primary
+
+// encodes function calls
+primary
+    = number
+    / v:identifier "(" WS ")"
+        { return { tag:"call", name:v, args:[] }; }
+    / v:identifier "(" WS args:arglist WS ")"
+        { return { tag:"call", name:v, args:args }; }
+    / v:identifier { return { tag:"ident", name:v }; }
+    / "(" WS expr:expression WS ")"
+        { return expr; }
+
+comma_expression = "," WS expr:expression
+        { return expr; }
+
+arglist
+    = first:expression rest:comma_expression*
+        { return [first].concat(rest); }
+
+/**
+ *  #identifiers
+ *  Grammar for variables names / function names
+ *  and other string identifiers.
+ */
+
+VALID_FIRST_CHAR
+    = [a-zA-Z_]
+
+VALID_CHAR
+    = [0-9a-zA-Z_]
+
+identifier
+    = neg:"-"? firstchar:VALID_FIRST_CHAR chars:VALID_CHAR*
+        { return {neg:neg, name:firstchar + chars.join('')}; }
+
+/*
+ * #numbers
+ * Grammar for float numbers such as
+ * 0.04, 10, -5.32
+ */
+
+number_frac
+    = "." chars:[0-9]*
+        { return "." + chars.join(''); }
+
+number
+     = neg:"-"? chars:[0-9]+ frac:number_frac?
+        { return parseFloat(neg + chars.join('') + frac); }
