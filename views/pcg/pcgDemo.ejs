@@ -2,54 +2,86 @@
 <head>
   <meta charset="utf-8">
   <title>Demo</title>
+
+  <style type="text/css" media="screen">
+    #editor {
+        width: 700px;
+        height: 400px;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+    }
+  </style>
+
   <script src="js/jquery-1.7.2.min.js"></script>
   <script src="js/three.min.js"></script>
   <script src="js/sylvester.src.js"></script>
   <script src="js/glUtils.js"></script>
+  <script src="js/seedrandom.js"></script>
+  <script src="js/OrbitControls.js"></script>
+  <script src="js/ace-builds/src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
   <script src="pcg/main.js"></script>
   <script src="pcg/parser.js"></script>
   <script src="pcg/default-env.js"></script>
   <script src="pcg/Scene.js"></script>
+  <script src="pcg/CustomLatheGeometry.js"></script>
+
 </head>
 <body>
 
-<textarea id="input" style="width:700px; height:300px;">
-</textarea>
+<div id="editor">transform 40 0 0
+  sphere 10 10
+lathe 10 4
+  return 4
+</div>
 
 <input id="submitbutton" type="button" value="Run" />
-
+<div id="container" style="width:700px; height:500px; background-color: #eee;"></div>
 <div id="console" style="width:700px; height:400px; border: solid 1px;"></div>
 
-<div id="container" style="width:700px; height:500px; background-color: #eee;"></div>
-
 <script>
+
+var editor = ace.edit("editor");
+editor.setTheme("ace/theme/monokai");
+editor.getSession().setMode("ace/mode/python");
+editor.session.setUseWorker(false)
 
 // Utility function to log messages
 var log_console = function(msg) {
     $('#console').append('<p>' + msg + '</p>');
 };
 
-var scene = new Scene();
+var SCENE = new Scene();
+var controls, renderer, camera, scene;
 
 // After page load
 $(function() {
     $('#submitbutton').click(function() {
-        var user_text = $('#input').val() + "\n";
+        var user_text = editor.getValue() + "\n";
         $('#console').html('');
         try {
-            scene.init();
+            SCENE.init();
             var parsed = PCG.parse(user_text);
             try {
                 var result = evalStatements(parsed, defaultEnv());
                 log_console(result);
-                scene.draw();
+                SCENE.render();
             }
             catch(e) {
-                log_console('Eval Error: ' + e);
+              var stack = e.stack.replace(/^[^\(]+?[\n$]/gm, '')
+                .replace(/^\s+at\s+/gm, '')
+                .replace(/^Object.<anonymous>\s*\(/gm, '{anonymous}()@')
+                .split('\n');
+                log_console('Eval Error: ' + stack);
             }
         }
         catch(e) {
-            log_console('Parse Error: ' + e);
+            var stack = e.stack.replace(/^[^\(]+?[\n$]/gm, '')
+              .replace(/^\s+at\s+/gm, '')
+              .replace(/^Object.<anonymous>\s*\(/gm, '{anonymous}()@')
+              .split('\n');
+            log_console('Parse Error: ' + stack);
         }
     });
 });

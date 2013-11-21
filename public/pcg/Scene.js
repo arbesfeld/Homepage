@@ -1,25 +1,44 @@
+// helper functions
+
+// convert a list into a list of args and apply a constructor
+function construct(constructor, args) {
+    function F() {
+        return constructor.apply(this, args);
+    }
+    F.prototype = constructor.prototype;
+    return new F();
+}
+
+// transform a mesh according to transform
+function transformMesh(mesh, transform) {
+    mesh.matrixAutoUpdate = false;
+
+    var meshMatrix = mesh.matrixWorld.clone();
+    var updateMatrix = construct(THREE.Matrix4, transform.transpose().flatten());
+    mesh.matrix.multiply(meshMatrix.multiply(updateMatrix));
+}
+
 function Scene() {
     // set the scene size
     this.WIDTH = 400;
     this.HEIGHT = 300;
+    this.SCALE = 50;
 
     // get the DOM element to attach to
     // - assume we've got jQuery to hand
     var $container = $('#container');
 
-    // create a WebGL renderer, camera
-    // and a scene
-    this.renderer = new THREE.WebGLRenderer();
+    renderer = new THREE.WebGLRenderer();
 
     // start the renderer
-    this.renderer.setSize(this.WIDTH, this.HEIGHT);
+    renderer.setSize(this.WIDTH, this.HEIGHT);
 
     // attach the render-supplied DOM element
-    $container.append(this.renderer.domElement);
-}
+    $container.append(renderer.domElement);
+};
 
 Scene.prototype.init = function() {
-    this.scene = new THREE.Scene();
+    scene = new THREE.Scene();
 
     // set some camera attributes
     var VIEW_ANGLE = 45,
@@ -27,7 +46,7 @@ Scene.prototype.init = function() {
       NEAR = 0.1,
       FAR = 10000;
 
-    this.camera =
+    camera =
       new THREE.PerspectiveCamera(
         VIEW_ANGLE,
         ASPECT,
@@ -35,11 +54,14 @@ Scene.prototype.init = function() {
         FAR);
 
     // add the camera to the scene
-    this.scene.add(this.camera);
+    scene.add(camera);
 
     // the camera starts at 0,0,0
     // so pull it back
-    this.camera.position.z = 300;
+    camera.position.z = 300;
+
+    controls = new THREE.OrbitControls(camera);
+    controls.addEventListener( 'change', this.render );
 
     // create a point light
     var pointLight =
@@ -50,17 +72,46 @@ Scene.prototype.init = function() {
     pointLight.position.y = 50;
     pointLight.position.z = 130;
 
-    // add to the scene
-    this.scene.add(pointLight);
-}
+    var pointLight2 =
+      new THREE.PointLight(0xFFFFFF);
 
-Scene.prototype.draw = function() {
-	this.renderer.render(this.scene, this.camera);
-}
+    pointLight2.position.x = -10;
+    pointLight2.position.y = -50;
+    pointLight2.position.z = -130;
 
+    var pointLight3 =
+      new THREE.PointLight(0xFFFFFF);
+
+    pointLight3.position.x = 10;
+    pointLight3.position.y = 130;
+    pointLight3.position.z = -50;
+
+    scene.add(pointLight);
+    scene.add(pointLight2);
+    scene.add(pointLight3);
+
+    // add subtle blue ambient lighting
+    var ambientLight = new THREE.AmbientLight(0x000044);
+    scene.add(ambientLight);
+};
+
+Scene.prototype.render = function() {
+	renderer.render(scene, camera);
+};
+
+// Scene.prototype.animate = function() {
+//     // note: three.js includes requestAnimationFrame shim
+//     controls.update();
+//     requestAnimationFrame( this.animate );
+//     this.render();
+// };
+
+// x = segments
+// y = rings
+// transform = transform of sphere
 Scene.prototype.addSphere = function(x, y, transform) {
     // set up the sphere vars
-    var radius = 50,
+    var radius = this.SCALE,
         segments = x,
         rings = y;
 
@@ -83,20 +134,30 @@ Scene.prototype.addSphere = function(x, y, transform) {
 
       sphereMaterial);
 
-    sphere.matrixAutoUpdate = false;
-
-    var sphereMatrix = sphere.matrixWorld.clone();
-    var updateMatrix = construct(THREE.Matrix4, transform.transpose().flatten());
-    sphere.matrix.multiply(sphereMatrix.multiply(updateMatrix));
+    transformMesh(sphere, transform);
 
     // add the sphere to the scene
-    this.scene.add(sphere);
-}
+    scene.add(sphere);
+};
 
-function construct(constructor, args) {
-    function F() {
-        return constructor.apply(this, args);
-    }
-    F.prototype = constructor.prototype;
-    return new F();
-}
+// Radii array is a 2d array that contains the radius at every point
+// from 0 to 2pi around the object, and from 0 to 1 along the y axis.
+// radiiArray[i][j] is at the angle i/len*2pi and the height j/len.
+Scene.prototype.addLatheObject = function (radiiArray, transform) {
+    var latheMaterial =
+      new THREE.MeshLambertMaterial(
+        {
+          color: 0xCC0000
+        });
+
+    var lathe = new THREE.Mesh(
+        new THREE.CustomLatheGeometry(radiiArray, this.SCALE/2, this.SCALE/10),
+        latheMaterial);
+
+    transformMesh(lathe, transform);
+    scene.add(lathe);
+};
+
+Scene.prototype.setSeed = function (seedName) {
+    Math.seedrandom(seedName);
+};

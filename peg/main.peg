@@ -43,6 +43,25 @@ statement
       v:identifier WS "=" WS expr:expression
         { return { tag:"=", left:v, right:expr }; }
 
+    // lathe
+    / "lathe " WS tStep:expression WS yStep:expression
+        { return { tag:"lathe", tStep:tStep, yStep:yStep }; }
+    // choice
+    // choose between blocks with probabilities determined
+    // by the "option" blocks)
+    / "choose" WS
+        { return { tag:"choice"}; }
+
+    // option
+    // a choice block
+    / "option " WS expr:expression
+        { return { tag:"option", expr:expr}; }
+
+    // seed
+    // set a specific seed
+    / "seed " WS v:identifier
+        { return { tag:"seed", v:v}; }
+
     // initializion
     / "set " WS v:identifier WS expr:expression
         { return { tag:"set", left:v, right:expr }; }
@@ -51,11 +70,11 @@ statement
     / "<3" [^\n]* { return undefined; }
 
     // function()
-    / "function " WS v:identifier "(" WS ")"
+    / "def " WS v:identifier "(" WS ")"
         { return { tag:"function", name:v, args:[]}; }
 
     // function(args)
-    / "function " WS v:identifier WS "(" WS args:ident_list WS ")"
+    / "def " WS v:identifier WS "(" WS args:ident_list WS ")"
         { return { tag:"function", name:v, args:args }; }
 
     // if
@@ -171,7 +190,7 @@ VALID_CHAR
 
 identifier
     = neg:"-"? firstchar:VALID_FIRST_CHAR chars:VALID_CHAR*
-        { return {neg:neg, name:firstchar + chars.join('')}; }
+        { return {neg:neg ? true : false, name:firstchar + chars.join('')}; }
 
 /*
  * #numbers

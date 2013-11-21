@@ -5,21 +5,25 @@ var log_console = function(msg) {
 // env is like:
 // { bindings: { x: 5, ... }, outer: { } }
 
-// Lookup a variable in an environment
+// Lookup a variable in an environment.
+// variable = {neg:true/false, name:name}
 var lookup = function (env, v) {
-    console.info(env.bindings);
     if (!(env.hasOwnProperty('bindings')))
         throw new Error("Env does not have bindings for " + v);
-    if (env.bindings.hasOwnProperty(v))
-        return env.bindings[v];
+    if (env.bindings.hasOwnProperty(v.name)) {
+        var val = env.bindings[v.name];
+        if (v.neg && typeof val === 'number')
+            return -val;
+        return val;
+    }
     return lookup(env.outer, v);
 };
 
 // Update existing binding in environment
 var update = function (env, v, val) {
     if (env.hasOwnProperty('bindings')) {
-        if (env.bindings.hasOwnProperty(v)) {
-            env.bindings[v] = val;
+        if (env.bindings.hasOwnProperty(v.name)) {
+            env.bindings[v.name] = val;
         } else {
             update(env.outer, v, val);
         }
@@ -29,14 +33,15 @@ var update = function (env, v, val) {
 };
 
 // Add a new binding to outermost level
+// variable = {neg:true/false, name:name}
 var addBinding = function (env, v, val) {
     if (env.hasOwnProperty('bindings')) {
-        env.bindings[v] = val;
+        env.bindings[v.name] = val;
     } else {
         env.bindings = {};
         env.transform = Matrix.I(4);
         env.outer = {};
-        env.bindings[v] = val;
+        env.bindings[v.name] = val;
     }
 };
 
@@ -159,7 +164,7 @@ var evalBlock = function (block, env) {
             if (evalExpr(stmt.expr, env)) {
                 val = evalStatements(block.children, newEnv);
             }
-            return 0;
+            return val;
 
         // Loop statement.
         // {expr: { tag:"loop", v:v, start:start, end:end}, children:...}
@@ -169,7 +174,7 @@ var evalBlock = function (block, env) {
             var newEnv;
             for (i = startVal; i < endVal; i++) {
                 newEnv = newScope(env);
-                var str = stmt.v.name;
+                var str = stmt.v;
                 addBinding(newEnv, str, i);
                 evalStatements(block.children, newEnv);
             }
@@ -196,7 +201,7 @@ var evalBlock = function (block, env) {
                 var i;
                 var newEnv = newScope(env);
                 for (i = 0; i < stmt.args.length; i++) {
-                    newEnv.bindings[stmt.args[i]] = arguments[i];
+                    newEnv.bindings[stmt.args[i].name] = arguments[i];
                 }
                 return evalFunction(block.children, newEnv);
             };
@@ -240,7 +245,60 @@ var evalBlock = function (block, env) {
         case 'sphere':
             var q1 = evalExpr(stmt.q1, env);
             var q2 = evalExpr(stmt.q2, env);
-            scene.addSphere(q1, q2, env.transform);
+            SCENE.addSphere(q1, q2, env.transform);
+            return 0;
+
+        // Choice
+        // {tag:'choice'} followed by n blocks of "option"
+        case 'choice':
+            val = evalOptions(block.children, env);
+            return val;
+
+        // Seed
+        // {tag:'seed' v:identifier}
+        case 'seed':
+            var name = stmt.v.name;
+            SCENE.setSeed(name);
+            return 0;
+
+        // Lathe
+        // {tag:'lathe', tStep:expr, yStep:expr }
+        case 'lathe':
+            var tStep = evalExpr(stmt.tStep, env);
+            var yStep = evalExpr(stmt.yStep, env);
+            if (tStep < 2 || yStep < 2)
+                throw new Error("Lathe arguments must be greater than 1.");
+
+            var tCounter, yCounter;
+            var t, y, r;
+            var newEnv;
+
+            // vertArray[i][j] is the vertex at t=i and y=j
+            // where t is the angle of the point from the origin
+            // and y is the height of the point
+            var vertArray = new Array(tStep)
+            for (i = 0; i < tStep; i++) {
+                vertArray[i] = new Array(yStep);
+            }
+
+            for (tCounter = 0; tCounter < tStep; tCounter++) {
+                for (yCounter = 0; yCounter < yStep; yCounter++) {
+                    // calculate the percentages
+                    t = tCounter / (tStep - 1.0);
+                    y = yCounter / (yStep - 1.0);
+
+                    // add the new default bindings that we use for lathes
+                    newEnv = newScope(env);
+                    addBinding(newEnv, {neg:false,name:"t"}, t);
+                    addBinding(newEnv, {neg:false,name:"y"}, y);
+
+                    // calculate the radius at t, y
+                    vertArray[tCounter][yCounter] = evalFunction(block.children, newEnv);
+                }
+            }
+
+            SCENE.addLatheObject(vertArray, env.transform);
+
             return 0;
 
         // Should not get here.
@@ -309,7 +367,7 @@ var evalFunction = function (seq, env) {
             return val;
         }
     }
-    return undefined;
+    return val;
 };
 
 var evalStatements = function (seq, env) {
@@ -317,10 +375,41 @@ var evalStatements = function (seq, env) {
     var val = undefined;
 
     for (i = 0; i < seq.length; i++) {
-        if (seq[i] === undefined || seq[i].statement == undefined)
+        if (seq[i] === undefined || seq[i].statement === undefined)
             continue;
 
         val = evalBlock(seq[i], env);
+    }
+    return val;
+};
+
+// Evaluate one of the options according to their probability.
+var evalOptions = function (options, env) {
+    var i;
+    var newEnv = newScope(env);
+    var total = 0;
+
+    // sum up the total choice amount
+    for (i = 0; i < options.length; i++) {
+        if (options[i] === undefined || options[i].statement === undefined)
+            continue;
+        if (options[i].statement.tag !== 'option')
+            throw new Error(options[i].statement.tag + " where there should be an option.");
+        total += evalExpr(options[i].statement.expr, env);
+    }
+
+    var rand = Math.random();
+    var currentTotal = 0;
+    var val;
+    for (i = 0; i < options.length; i++) {
+        if (options[i] === undefined || options[i].statement === undefined)
+            continue;
+        currentTotal += evalExpr(options[i].statement.expr, env);
+        if (rand <= currentTotal / total) {
+            // do this option
+            val = evalStatements(options[i].children, newEnv);
+            break;
+        }
     }
     return val;
 };
