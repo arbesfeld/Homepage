@@ -151,7 +151,7 @@ Scene.prototype.addLatheObject = function (radiiArray, transform) {
         });
 
     var lathe = new THREE.Mesh(
-        new THREE.CustomLatheGeometry(radiiArray, this.SCALE/2, this.SCALE/10),
+        new THREE.CustomLatheGeometry(radiiArray, this.SCALE/4, this.SCALE/10),
         latheMaterial);
 
     transformMesh(lathe, transform);

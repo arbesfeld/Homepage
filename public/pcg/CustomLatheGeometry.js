@@ -80,6 +80,7 @@ THREE.CustomLatheGeometry = function ( radiiArray, scale, height ) {
 
                         // make the bottom face
                         if (j == 0) {
+                                // TODO: add UV's
                                 this.faces.push( new THREE.Face3( a, bottomFaceV, b ) );
                         }
                         // make the top face
