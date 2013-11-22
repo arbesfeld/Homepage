@@ -1,9 +1,58 @@
+if (typeof module !== 'undefined') {
+    addBinding = require('./parser.js').addBinding;
+}
+
 var defaultEnv = function() {
     var env = { };
-    addBinding(env, {neg:false, name:'sin'}, function(x) { return Math.sin(x); });
-    addBinding(env, {neg:false, name:'cos'}, function(x) { return Math.cos(x); });
-    addBinding(env, {neg:false, name:'abs'}, function(x) { return Math.abs(x); });
-    addBinding(env, {neg:false, name:'sqrt'}, function(x) { return Math.sqrt(x); });
-    addBinding(env, {neg:false, name:'rand'}, function() { return Math.random(); });
+
+    var clamp = function(v, minVal, maxVal) {
+        return Math.min(Math.max(v, minVal), maxVal);
+    }
+
+    addBinding(env, 'sin', Math.sin);
+    addBinding(env, 'cos', Math.cos);
+    addBinding(env, 'abs', Math.abs);
+    addBinding(env, 'sqrt', Math.sqrt);
+    addBinding(env, 'min', Math.min);
+    addBinding(env, 'max', Math.max);
+    addBinding(env, 'clog', function(x) { console.log(x); });
+    addBinding(env, 'clamp', clamp);
+
+    // random in range from min to max
+    addBinding(env, 'rand',
+        function(min, max) { return min !== undefined && max !== undefined ? Math.random() * (max - min) + min : Math.random(); });
+
+    // random integer in range from min to max
+    addBinding(env, 'randi',
+        function(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; });
+
+    addBinding(env, 'PI', Math.PI);
+
+
+    addBinding(env, 'lerp', function(v0, v1, t) { return v0+(v1-v0)*t; });
+    addBinding(env, 'smoothstep',
+        function(x, edge0, edge1) {
+            edge0 = edge0 || 0;
+            edge1 = edge1 || 1;
+            x = clamp((x - edge0)/(edge1 - edge0), 0.0, 1.0);
+            return x*x*x*(x*(x*6-15)+10);
+        }
+    );
+
+    // these do not work in node
+    if (typeof module === 'undefined') {
+        addBinding(env, 'alert', alert);
+
+        // uniforms
+        addBinding(env, '#transform', Matrix.I(4));
+        addBinding(env, '#b', 0.0);
+        addBinding(env, '#noise', 0.0);
+    }
+
     return env;
 };
+
+// If we are used as Node module, export symbols
+if (typeof module !== 'undefined') {
+    module.exports.defaultEnv = defaultEnv;
+}

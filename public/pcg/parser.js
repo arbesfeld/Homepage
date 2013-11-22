@@ -2,6 +2,9 @@ var log_console = function(msg) {
     $('#console').append('<p>' + msg + '</p>');
 };
 
+// global variables
+var gNewestObj = undefined;
+
 // env is like:
 // { bindings: { x: 5, ... }, outer: { } }
 
@@ -10,8 +13,11 @@ var log_console = function(msg) {
 var lookup = function (env, v) {
     if (!(env.hasOwnProperty('bindings')))
         throw new Error("Env does not have bindings for " + v);
-    if (env.bindings.hasOwnProperty(v.name)) {
-        var val = env.bindings[v.name];
+
+    var str = v.hasOwnProperty('name') ? v.name : v;
+
+    if (env.bindings.hasOwnProperty(str)) {
+        var val = env.bindings[str];
         if (v.neg && typeof val === 'number')
             return -val;
         return val;
@@ -22,8 +28,10 @@ var lookup = function (env, v) {
 // Update existing binding in environment
 var update = function (env, v, val) {
     if (env.hasOwnProperty('bindings')) {
-        if (env.bindings.hasOwnProperty(v.name)) {
-            env.bindings[v.name] = val;
+        var str = v.hasOwnProperty('name') ? v.name : v;
+
+        if (env.bindings.hasOwnProperty(str)) {
+            env.bindings[str] = val;
         } else {
             update(env.outer, v, val);
         }
@@ -35,19 +43,20 @@ var update = function (env, v, val) {
 // Add a new binding to outermost level
 // variable = {neg:true/false, name:name}
 var addBinding = function (env, v, val) {
+    var str = v.hasOwnProperty('name') ? v.name : v;
+
     if (env.hasOwnProperty('bindings')) {
-        env.bindings[v.name] = val;
+        env.bindings[str] = val;
     } else {
         env.bindings = {};
-        env.transform = Matrix.I(4);
         env.outer = {};
-        env.bindings[v.name] = val;
+        env.bindings[str] = val;
     }
 };
 
 // Create a new scope.
 var newScope = function (env) {
-    return { bindings:{}, transform:env.transform, outer:env };
+    return { bindings:{}, outer:env };
 }
 
 // Call a fucnction on arguments.
@@ -62,7 +71,9 @@ var call = function (expr, env) {
     for (i = 0; i < expr.args.length; ++i) {
         ev_args[i] = evalExpr(expr.args[i], env);
     }
-    return func.apply(null, ev_args);
+
+    var val = func.apply(env, ev_args);
+    return val;
 };
 
 // Evaluate an expression and return the result.
@@ -106,6 +117,9 @@ var evalExpr = function (expr, env) {
                    evalExpr(expr.right, env);
         case '/':
             return evalExpr(expr.left, env) /
+                   evalExpr(expr.right, env);
+        case '%':
+            return evalExpr(expr.left, env) %
                    evalExpr(expr.right, env);
         case '^':
             return Math.pow(evalExpr(expr.left, env),
@@ -159,10 +173,8 @@ var evalBlock = function (block, env) {
         // If statement.
         // {expr: { tag:"if", body:expression }, children:...}
         case 'if':
-            // Create a new scope for if statements.
-            var newEnv = newScope(env);
             if (evalExpr(stmt.expr, env)) {
-                val = evalStatements(block.children, newEnv);
+                val = evalStatements(block.children, env);
             }
             return val;
 
@@ -194,15 +206,18 @@ var evalBlock = function (block, env) {
             return 0;
 
         // Functions.
-        // {expr: { tag:"function", name:"f", args[]}, children:...}
-        case 'function':
+        // {expr: { tag:"def", name:"f", args[]}, children:...}
+        case 'def':
+            // the env is passed as "this"
             var newFunc = function() {
                 // This function takes any number of arguments.
                 var i;
-                var newEnv = newScope(env);
+                var newEnv = newScope(this);
+
                 for (i = 0; i < stmt.args.length; i++) {
                     newEnv.bindings[stmt.args[i].name] = arguments[i];
                 }
+
                 return evalFunction(block.children, newEnv);
             };
             addBinding(env, stmt.name, newFunc);
@@ -241,24 +256,14 @@ var evalBlock = function (block, env) {
             return 0;
 
         // Sphere
-        // {{tag:'sphere', q1:16, q2:16 }}
+        // {{tag:'sphere', q:16 }}
         case 'sphere':
-            var q1 = evalExpr(stmt.q1, env);
-            var q2 = evalExpr(stmt.q2, env);
-            SCENE.addSphere(q1, q2, env.transform);
-            return 0;
+            var qVal = evalExpr(stmt.q, env);
+            var transform = lookup(env, '#transform');
+            var bVal = lookup(env, '#b');
+            var noiseVal = lookup(env, '#noise');
 
-        // Choice
-        // {tag:'choice'} followed by n blocks of "option"
-        case 'choice':
-            val = evalOptions(block.children, env);
-            return val;
-
-        // Seed
-        // {tag:'seed' v:identifier}
-        case 'seed':
-            var name = stmt.v.name;
-            SCENE.setSeed(name);
+            gNewestObj = SCENE.addSphere(qVal, transform, bVal, noiseVal);
             return 0;
 
         // Lathe
@@ -284,21 +289,60 @@ var evalBlock = function (block, env) {
             for (tCounter = 0; tCounter < tStep; tCounter++) {
                 for (yCounter = 0; yCounter < yStep; yCounter++) {
                     // calculate the percentages
-                    t = tCounter / (tStep - 1.0);
+                    t = 2 * Math.PI * tCounter / (tStep - 1.0);
                     y = yCounter / (yStep - 1.0);
 
                     // add the new default bindings that we use for lathes
                     newEnv = newScope(env);
-                    addBinding(newEnv, {neg:false,name:"t"}, t);
-                    addBinding(newEnv, {neg:false,name:"y"}, y);
+                    addBinding(newEnv, "t", t);
+                    addBinding(newEnv, "y", y);
 
                     // calculate the radius at t, y
                     vertArray[tCounter][yCounter] = evalFunction(block.children, newEnv);
                 }
             }
 
-            SCENE.addLatheObject(vertArray, env.transform);
+            var transform = lookup(env, '#transform');
+            var bVal = lookup(env, '#b');
+            var noiseVal = lookup(env, '#noise');
 
+            gNewestObj = SCENE.addLatheObject(vertArray, transform, bVal, noiseVal);
+
+            return 0;
+
+        // displace function
+        // {tag:'displace'}
+        case 'displace':
+            var compiledDisplacement = standalone(block.children, env);
+            gNewestObj.addDisplacement(compiledDisplacement);
+
+            return 0;
+
+        // random displacement
+        // {statement:{tag:'displacen', b:16, noise:10}, children:{}}
+        case 'displacen':
+            var bVal = evalExpr(stmt.b, env);
+            var noiseVal = evalExpr(stmt.noise, env);
+
+            var newEnv = newScope(env);
+
+            // add bindings for b and noise
+            addBinding(newEnv, '#b', bVal);
+            addBinding(newEnv, '#noise', noiseVal);
+
+            return evalStatements(block.children, newEnv);
+
+        // Choice
+        // {tag:'choose'} followed by n blocks of "option"
+        case 'choose':
+            val = evalOptions(block.children, env);
+            return val;
+
+        // Seed
+        // {tag:'seed' v:identifier}
+        case 'seed':
+            var name = stmt.v.name;
+            SCENE.setSeed(name);
             return 0;
 
         // Should not get here.
@@ -311,8 +355,10 @@ var evalTranslate = function (xExpr, yExpr, zExpr, env) {
     var tx = evalExpr(xExpr, env);
     var ty = evalExpr(yExpr, env);
     var tz = evalExpr(zExpr, env);
+
+    var curTransform = lookup(env, '#transform');
     var translateMat = Matrix.Translation(Vector.create([tx, ty, tz]));
-    env.transform = env.transform.multiply(translateMat);
+    addBinding(env, '#transform', curTransform.multiply(translateMat));
 };
 
 var evalScale = function (xExpr, yExpr, zExpr, env) {
@@ -320,8 +366,9 @@ var evalScale = function (xExpr, yExpr, zExpr, env) {
     var sy = evalExpr(yExpr, env);
     var sz = evalExpr(zExpr, env);
 
+    var curTransform = lookup(env, '#transform');
     var scaleMat = Matrix.Diagonal([sx, sy, sz, 1]);
-    env.transform = env.transform.multiply(scaleMat);
+    addBinding(env, '#transform', curTransform.multiply(scaleMat));
 };
 
 var evalRotate = function(xExpr, yExpr, zExpr, env) {
@@ -329,24 +376,24 @@ var evalRotate = function(xExpr, yExpr, zExpr, env) {
     var ry = evalExpr(yExpr, env);
     var rz = evalExpr(zExpr, env);
 
-    var rotX = Matrix.RotateX4(rx);
-    var rotY = Matrix.RotateY4(ry);
-    var rotZ = Matrix.RotateZ4(rz);
+    var rotX = Matrix.RotationX4(rx);
+    var rotY = Matrix.RotationY4(ry);
+    var rotZ = Matrix.RotationZ4(rz);
 
+    var curTransform = lookup(env, '#transform');
     var rotationMat = rotX.multiply(rotY.multiply(rotZ));
-    env.transform = env.transform.multiply(rotationMat);
+    addBinding(env, '#transform', curTransform.multiply(rotationMat));
 };
 
 var evalTransform = function (seq, env) {
     if (seq.length % 3 != 0 || seq.length == 0 || seq.length > 9)
         throw new Error('Invalid transform of length ' + seq.length);
 
-    // rotate first
+    evalTranslate(seq[0], seq[1], seq[2], env);
+
     if (seq.length == 9) {
         evalRotate(seq[6], seq[7], seq[8], env);
     }
-
-    evalTranslate(seq[0], seq[1], seq[2], env);
 
     if (seq.length >= 6) {
         evalScale(seq[3], seq[4], seq[5], env);
@@ -413,3 +460,8 @@ var evalOptions = function (options, env) {
     }
     return val;
 };
+
+// If we are used as Node module, export symbols
+if (typeof module !== 'undefined') {
+    module.exports.addBinding = addBinding;
+}

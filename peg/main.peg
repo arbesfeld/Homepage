@@ -14,7 +14,7 @@ WS = " "*
  */
 
 line
-  = SAMEDENT statement:statement EOL
+  = SAMEDENT statement:statement WS EOL
     children:( b:blank* INDENT c:( blank / line )* DEDENT { return b.concat(c); })?
     { return {statement:statement, children: children === "" ? [] : children}; }
 
@@ -49,8 +49,8 @@ statement
     // choice
     // choose between blocks with probabilities determined
     // by the "option" blocks)
-    / "choose" WS
-        { return { tag:"choice"}; }
+    / "choose"
+        { return { tag:"choose"}; }
 
     // option
     // a choice block
@@ -71,11 +71,11 @@ statement
 
     // function()
     / "def " WS v:identifier "(" WS ")"
-        { return { tag:"function", name:v, args:[]}; }
+        { return { tag:"def", name:v, args:[]}; }
 
     // function(args)
     / "def " WS v:identifier WS "(" WS args:ident_list WS ")"
-        { return { tag:"function", name:v, args:args }; }
+        { return { tag:"def", name:v, args:args }; }
 
     // if
     / "if " WS expr:expression
@@ -94,7 +94,7 @@ statement
         { return { tag:"return", body:expr}; }
 
     // transform
-    / "transform " WS exprs:(expr:expression WS {return expr;} )+
+    / "transform " exprs:(WS expr:expression { return expr; } )+
         { return { tag:"transform", exprs:exprs}; }
 
     // translate
@@ -110,8 +110,20 @@ statement
         { return { tag:"rotate", xExpr:x, yExpr:y, zExpr:z }; }
 
     // sphere q1 q2
-    / "sphere " WS q1:expression WS q2:expression
-        { return { tag:"sphere", q1:q1, q2:q2 }; }
+    / "sphere " WS q:expression
+        { return { tag:"sphere", q:q }; }
+
+    // random noise for the block
+    / "displacen " WS b:expression WS noise:expression
+        { return { tag:"displacen", b:b, noise:noise}; }
+
+    // a displace block remaps the x,y,z variables
+    / "displace"
+        { return { tag:"displace" }; }
+
+    // a function from (x, y, z) that returns a set {x:x, y:y, z:z}
+    / "func"
+        { return { tag:"displaceFunc" }; }
 
     // generic expression
     / expr:expression
@@ -135,8 +147,13 @@ expression
 COMP_OP = "<=" / ">=" / "!=" / "==" / "<" / ">"
 
 comparative
-    = left:additive WS op:COMP_OP WS right:comparative
+    = left:modulo WS op:COMP_OP WS right:comparative
         { return { tag: op, left:left, right:right }; }
+    / modulo
+
+modulo
+    = left:additive WS "%" WS right:modulo
+        { return {tag:"%", left:left, right:right}; }
     / additive
 
 ADDITIVE_OP = "+" / "-"
@@ -169,7 +186,7 @@ primary
     / "(" WS expr:expression WS ")"
         { return expr; }
 
-comma_expression = "," WS expr:expression
+comma_expression = WS "," WS expr:expression
         { return expr; }
 
 arglist
@@ -203,5 +220,6 @@ number_frac
         { return "." + chars.join(''); }
 
 number
-     = neg:"-"? chars:[0-9]+ frac:number_frac?
-        { return parseFloat(neg + chars.join('') + frac); }
+     = neg:"-"? num:(chars:[0-9]+ frac:number_frac? { return chars.join('') + frac; }
+                 /   chars:[0-9]* frac:number_frac  { return chars.join('') + frac; })
+        { return parseFloat(neg + num); }

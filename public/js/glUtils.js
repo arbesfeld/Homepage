@@ -191,3 +191,30 @@ function makeOrtho(left, right, bottom, top, znear, zfar)
 	       [0, 0, 0, 1]]);
 }
 
+// Load a file |file| and return |callback| when the file has been loaded
+// |noCache| specifies whether the url should be cached
+// |isJSON| specifies whether the file is a JSON
+function loadFile(file, callback, noCache, isJSON) {
+    var request = new XMLHttpRequest();
+    request.onreadystatechange = function() {
+        if (request.readyState == 1) {
+            if (isJSON) {
+                request.overrideMimeType('application/json');
+            }
+            request.send();
+        } else if (request.readyState == 4) {
+            if (request.status == 200) {
+                callback(request.responseText);
+            } else if (request.status == 404) {
+                throw 'File "' + file + '" does not exist.';
+            } else {
+                throw 'XHR error ' + request.status + '.';
+            }
+        }
+    };
+    var url = file;
+    if (noCache) {
+        url += '?' + (new Date()).getTime();
+    }
+    request.open('GET', url, true);
+}
