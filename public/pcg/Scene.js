@@ -22,7 +22,7 @@ function Scene(callback) {
     // set the scene size
     this.WIDTH = 700;
     this.HEIGHT = 400;
-    this.SCALE = 1;
+    this.SCALE = 10;
 
     // set some camera attributes
     var VIEW_ANGLE = 45,
@@ -51,7 +51,9 @@ function Scene(callback) {
 
     // the camera starts at 0,0,0
     // so pull it back
-    this.camera.position.z = 10;
+    this.camera.position.z = 30;
+    this.camera.position.x = 30;
+    this.camera.position.y = 30;
 
     this.controls = new THREE.OrbitControls(this.camera);
 
@@ -65,15 +67,13 @@ function Scene(callback) {
             shader.valueOf = shader.toSource = shader.toString
                 = function() { return str };
 
-            if (this.vsDisplacement !== Object("") && this.fsDisplacement !== Object("") && this.fsDefault !== Object("")) {
+            if (this.fsDefault.valueOf() !== "") {
                 // all shaders have loaded, we are done with init
                 callback();
             }
         }
     };
 
-    loadFile("shaders/vs-randDisplacement.txt", shaderLoaded(this.vsRandDisplacement).bind(this), false);
-    loadFile("shaders/fs-randDisplacement.txt", shaderLoaded(this.fsRandDisplacement).bind(this), false);
     loadFile("shaders/fs-default.txt", shaderLoaded(this.fsDefault).bind(this), false);
 
     this.fireTexture = new THREE.ImageUtils.loadTexture( 'images/explosion.png' );
@@ -85,73 +85,52 @@ Scene.prototype.init = function() {
     // add the camera to the scene
     this.scene.add(this.camera);
 
-    // create a point light
-    var pointLight =
-      new THREE.PointLight(0xFFFFFF);
+    var hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.6 );
+    hemiLight.color.setHSL( 0.6, 0.75, 0.5 );
+    hemiLight.groundColor.setHSL( 0.095, 0.5, 0.5 );
+    hemiLight.position.set( 0, 500, 0 );
+    this.scene.add( hemiLight );
 
-    // set its position
-    pointLight.position.x = 10;
-    pointLight.position.y = 50;
-    pointLight.position.z = 130;
+    var dirLight = new THREE.DirectionalLight( 0xffffff, 1 );
+    dirLight.position.set( -1, 0.75, 1 );
+    dirLight.position.multiplyScalar( 50);
+    dirLight.name = "dirlight";
+    // dirLight.shadowCameraVisible = true;
 
-    var pointLight2 =
-      new THREE.PointLight(0xFFFFFF);
+    this.scene.add( dirLight );
 
-    pointLight2.position.x = -10;
-    pointLight2.position.y = -50;
-    pointLight2.position.z = -130;
+    dirLight.castShadow = true;
+    dirLight.shadowMapWidth = dirLight.shadowMapHeight = 1024*2;
 
-    var pointLight3 =
-      new THREE.PointLight(0xFFFFFF);
+    var d = 300;
 
-    pointLight3.position.x = 10;
-    pointLight3.position.y = 130;
-    pointLight3.position.z = -50;
+    dirLight.shadowCameraLeft = -d;
+    dirLight.shadowCameraRight = d;
+    dirLight.shadowCameraTop = d;
+    dirLight.shadowCameraBottom = -d;
 
-    var pointLight4 =
-      new THREE.PointLight(0xFFFFFF);
-
-    pointLight4.position.x = 130;
-    pointLight4.position.y = 50;
-    pointLight4.position.z = 10;
-
-    this.scene.add(pointLight);
-    this.scene.add(pointLight2);
-    this.scene.add(pointLight3);
-    this.scene.add(pointLight4);
-
-    var pointLight5 =
-      new THREE.PointLight(0xFFFFFF);
-
-    pointLight5.position.x = -130;
-    pointLight5.position.y = -50;
-    pointLight5.position.z = 10;
-
-    this.scene.add(pointLight);
-    // this.scene.add(pointLight2);
-    this.scene.add(pointLight3);
-    this.scene.add(pointLight4);
-    this.scene.add(pointLight5);
+    dirLight.shadowCameraFar = 3500;
+    dirLight.shadowBias = -0.0001;
+    dirLight.shadowDarkness = 0.35;
 
     // // add subtle blue ambient lighting
-    var ambientLight = new THREE.AmbientLight(0x000044);
-    this.scene.add(ambientLight);
+    // var ambientLight = new THREE.AmbientLight(0x000044);
+    // this.scene.add(ambientLight);
 
     // this.controls.addEventListener( 'change',
     //     this.render.bind(this)
     // );
 
-
+    // this.render();
     this.animate.call(this);
 };
 
 Scene.prototype.render = function() {
-    // controls.update();
+    this.controls.update();
 	this.renderer.render(this.scene, this.camera);
 };
 
 Scene.prototype.animate = function() {
-//     // note: three.js includes requestAnimationFrame shim
 //     controls.update();
     requestAnimationFrame(this.animate.bind(this));
     this.render();
@@ -159,56 +138,65 @@ Scene.prototype.animate = function() {
 
 // q = quality of sphere
 // transform = transform of sphere
-Scene.prototype.addSphere = function(q, transform, b, noise) {
-    var sphereMaterial = getMaterial(b, noise, this.fsDefault);
+Scene.prototype.addSphere = function(q, transform) {
     var sphere = new THREE.Mesh(
       new THREE.SphereGeometry(this.SCALE, q, q),
-      sphereMaterial);
+      new THREE.MeshBasicMaterial());
 
     sphere.fshader = this.fsDefault;
-    sphere.b = b;
-    sphere.noise = noise;
     transformMesh(sphere, transform);
+    sphere.setMaterial();
 
-    // add the sphere to the scene
     this.scene.add(sphere);
-
+    this.render();
     return sphere;
 };
 
-Scene.prototype.addCube = function(q, transform, b, noise) {
-    var cubeMaterial = getMaterial(b, noise, this.fsDefault);
+Scene.prototype.addCube = function(q, transform) {
     var cube = new THREE.Mesh(
-      new THREE.CubeGeometry(1, 1, 1, q, q, q),
-      cubeMaterial);
+      new THREE.CubeGeometry(this.SCALE, this.SCALE, this.SCALE, q, q, q),
+      new THREE.MeshBasicMaterial());
 
     cube.fshader = this.fsDefault;
-    cube.b = b;
-    cube.noise = noise;
-
     transformMesh(cube, transform);
+    cube.setMaterial();
 
-    // add the cube to the scene
     this.scene.add(cube);
+    this.render();
 
     return cube;
+};
+
+Scene.prototype.addPlane = function(q, transform) {
+    var plane = new THREE.Mesh(
+      new THREE.PlaneGeometry(this.SCALE, this.SCALE, q, q),
+      new THREE.MeshBasicMaterial());
+
+    plane.fshader = this.fsDefault;
+    transformMesh(plane, transform);
+    plane.setMaterial();
+
+    this.scene.add(plane);
+    this.render();
+
+    return plane;
 };
 
 // Radii array is a 2d array that contains the radius at every point
 // from 0 to 2pi around the object, and from 0 to 1 along the y axis.
 // radiiArray[i][j] is at the angle i/len*2pi and the height j/len.
-Scene.prototype.addLatheObject = function (radiiArray, transform, b, noise) {
-    var latheMaterial = getMaterial(b, noise, this.fsDefault);
-
+Scene.prototype.addLatheObject = function (radiiArray, transform) {
     var lathe = new THREE.Mesh(
         new THREE.CustomLatheGeometry(radiiArray, this.SCALE, this.SCALE),
-        latheMaterial);
+        new THREE.MeshBasicMaterial());
 
     lathe.fshader = this.fsDefault;
-    lathe.b = b;
-    lathe.noise = noise;
+    lathe.setMaterial();
+
     transformMesh(lathe, transform);
+
     this.scene.add(lathe);
+    this.render();
 
     return lathe;
 };

@@ -315,5 +315,4 @@ var ShaderLib = {
 		"}\n" +
 		"#endif\n" +
 		"}\n",
-
 };

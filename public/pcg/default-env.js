@@ -24,7 +24,7 @@ var defaultEnv = function() {
 
     // random integer in range from min to max
     addBinding(env, 'randi',
-        function(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; });
+        function(min, max) { return Math.floor(Math.random() * (Math.round(max) - Math.round(min) + 1)) + Math.round(min); });
 
     addBinding(env, 'PI', Math.PI);
     addBinding(env, 'EPS', 0.001);

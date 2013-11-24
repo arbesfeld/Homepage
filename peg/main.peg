@@ -117,17 +117,26 @@ statement
     / "cube " WS q:expression
         { return { tag:"cube", q:q }; }
 
+    // plane q
+    / "plane " WS q:expression
+        { return { tag:"plane", q:q }; }
+
     // random noise for the block
-    / "displacen " WS b:expression WS noise:expression
-        { return { tag:"displacen", b:b, noise:noise}; }
+    / "displacen " WS noise:expression
+        { return { tag:"displacen", noise:noise}; }
 
     // a displace block remaps the x,y,z variables
     / "displace"
         { return { tag:"displace" }; }
 
-    // a function from (x, y, z) that returns a set {x:x, y:y, z:z}
-    / "func"
-        { return { tag:"displaceFunc" }; }
+    // a displace block remaps the x,y,z variables
+    / "displacev"
+        { return { tag:"displacev" }; }
+
+    // attach to a vertex that is in x = [xMin, xMax] etc
+    / "attach " WS xMin:expression WS yMin:expression WS zMin:expression
+                WS xMax:expression WS xMax:expression WS xMax:expression
+        { return { tag:"attach", xMin:xMin, yMin:yMin, zMin:zMin, xMax:xMax, yMax:yMax, zMax:zMax }; }
 
     // generic expression
     / expr:expression

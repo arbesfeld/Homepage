@@ -1,7 +1,3 @@
-var log_console = function(msg) {
-    $('#console').append('<p>' + msg + '</p>');
-};
-
 // global variables
 var gNewestObj = undefined;
 
@@ -267,10 +263,7 @@ var evalBlock = function (block, env) {
         case 'sphere':
             var qVal = evalExpr(stmt.q, env);
             var transform = lookup(env, '#transform');
-            var bVal = lookup(env, '#b');
-            var noiseVal = lookup(env, '#noise');
-
-            gNewestObj = SCENE.addSphere(qVal, transform, bVal, noiseVal);
+            gNewestObj = SCENE.addSphere(qVal, transform);
             return 0;
 
         // Cube
@@ -278,10 +271,17 @@ var evalBlock = function (block, env) {
         case 'cube':
             var qVal = evalExpr(stmt.q, env);
             var transform = lookup(env, '#transform');
-            var bVal = lookup(env, '#b');
-            var noiseVal = lookup(env, '#noise');
 
-            gNewestObj = SCENE.addCube(qVal, transform, bVal, noiseVal);
+            gNewestObj = SCENE.addCube(qVal, transform);
+            return 0;
+
+        // Plane
+        // {{tag:'plane', q:16 }}
+        case 'plane':
+            var qVal = evalExpr(stmt.q, env);
+            var transform = lookup(env, '#transform');
+
+            gNewestObj = SCENE.addPlane(qVal, transform);
             return 0;
 
         // Lathe
@@ -321,34 +321,61 @@ var evalBlock = function (block, env) {
             }
 
             var transform = lookup(env, '#transform');
-            var bVal = lookup(env, '#b');
-            var noiseVal = lookup(env, '#noise');
 
-            gNewestObj = SCENE.addLatheObject(vertArray, transform, bVal, noiseVal);
+            gNewestObj = SCENE.addLatheObject(vertArray, transform);
 
             return 0;
 
         // displace function
         // {tag:'displace'}
         case 'displace':
-            var compiledDisplacement = standalone(block.children, env);
-            gNewestObj.addDisplacement(compiledDisplacement);
+            function newFunc(env) {
+                return function(x, y, z) {
+                    var newEnv = newScope(env);
+                    addBinding(newEnv, 'x', x);
+                    addBinding(newEnv, 'y', y);
+                    addBinding(newEnv, 'z', z);
+                    evalFunction(block.children, newEnv);
+                    return [lookup(newEnv, 'x'),
+                            lookup(newEnv, 'y'),
+                            lookup(newEnv, 'z')];
+                };
+            };
+            gNewestObj.addDisplacement(newFunc(env));
 
             return 0;
 
+        // vertex displacement
+        case 'displacev':
+            var compiledDisplacement = standalone(block.children, env);
+            gNewestObj.addVDisplacement(compiledDisplacement);
+            return 0;
+
         // random displacement
-        // {statement:{tag:'displacen', b:16, noise:10}, children:{}}
+        // {statement:{tag:'displacen', noise:10}, children:{}}
         case 'displacen':
-            var bVal = evalExpr(stmt.b, env);
             var noiseVal = evalExpr(stmt.noise, env);
+            gNewestObj.addDisplacementNoise(noiseVal);
+            return 0;
 
+        // find a vertex on the object and transform the next object by its
+        // position and normal
+        // {statement:{tag:'attach', xMin:expr, yMin:expr, zMin:expr
+        // xMax:expr, yMax:expr, zMax:expr }, children:{}}
+        case 'attach':
+            var xMin = evalExpr(stmt.xMin, env);
+            var yMin = evalExpr(stmt.yMin, env);
+            var zMin = evalExpr(stmt.zMin, env);
+            var xMax = evalExpr(stmt.xMin, env);
+            var yMax = evalExpr(stmt.yMax, env);
+            var zMax = evalExpr(stmt.zMax, env);
+
+            var transform = gNewestObj.getAttachPoint(xMin, yMin, zMin,
+                                                      xMax, yMax, zMax);
             var newEnv = newScope(env);
-
-            // add bindings for b and noise
-            addBinding(newEnv, '#b', bVal);
-            addBinding(newEnv, '#noise', noiseVal);
-
-            return evalStatements(block.children, newEnv);
+            addBindings(newEnv, '#transform', transform);
+            evalStatements(block.children, newEnv);
+            return 0;
 
         // Choice
         // {tag:'choose'} followed by n blocks of "option"
