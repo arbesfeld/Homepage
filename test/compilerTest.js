@@ -32,3 +32,15 @@ var complexTest = 'if x < 5\n\
     x = x + i\n';
 stmts = parse(complexTest);
 console.log(compiler.standalone(stmts));
+
+var realStr = "\
+set dist (x-sx)^2 + (y-sy)^2 + (z-sz)^2\n\
+if dist < thresh\n\
+  set val smoothstep(dist/thresh)\n\
+  set mult lerp(depth, 1, smoothstep(dist/thresh)^20)\n\
+  set x x*mult\n\
+  set y y*mult\n\
+  set z z*mult\n";
+
+stmts = parse(realStr);
+console.log(compiler.standalone(stmts));

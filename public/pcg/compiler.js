@@ -1,12 +1,24 @@
+var glslNum = function (expr) {
+    var res = expr.toString();
+    if (expr % 1 === 0) {
+        // if the number is an integer
+        res += '.';
+    }
+    return res;
+}
+
 var compileExpr = function (expr) {
     if (typeof expr === 'number') {
-        var res = expr.toString();
-        if (typeof expr === 'int') {
-            res += '.';
-        }
-        return res;
+        return glslNum(expr);
     }
     switch(expr.tag) {
+        case 'and':
+            return '(' + compileExpr(expr.left) + ') && (' +
+                         compileExpr(expr.right) + ')';
+        case 'or':
+            return '(' + compileExpr(expr.left) + ') || (' +
+                         compileExpr(expr.right) + ')';
+
         case '>':
             return '(' + compileExpr(expr.left) + ')>(' +
                          compileExpr(expr.right) + ')';
@@ -38,11 +50,12 @@ var compileExpr = function (expr) {
         case '-':
             return '(' + compileExpr(expr.left) + ')-(' +
                          compileExpr(expr.right) + ')';
+
         case '%':
-            return '(' + compileExpr(expr.left) + ')%(' +
+            return 'mod(' + compileExpr(expr.left) + ', ' +
                          compileExpr(expr.right) + ')';
         case '^':
-            return '(' + compileExpr(expr.left) + ')^(' +
+            return 'pow(' + compileExpr(expr.left) + ', ' +
                          compileExpr(expr.right) + ')';
 
         case 'call':
@@ -63,39 +76,46 @@ var compileExpr = function (expr) {
     }
 };
 
-var compileEnvironment = function (env) {
+var compileEnvironment = function (env, added) {
     var i, res, name, val;
+    added = added || {};
     res = '';
     if (env.hasOwnProperty('bindings')) {
-        res += compileEnvironment(env.outer);
         var bindings = env.bindings;
         for(var name in bindings) {
+            if (added.hasOwnProperty(name))
+                continue;
+            added[name] = true;
             val = bindings[name];
 
             if (name.charAt(0) === '#')
                 continue;
 
             // do not compile functions
-            if (typeof val === 'function')
-                continue;
-
-            res += 'float ' + name + ' = ' + val.toString() + ';\n';
+            if (typeof val === 'number')
+                res += 'float ' + name + ' = ' + glslNum(val) + ';\n';
         }
+        res += compileEnvironment(env.outer, added);
     }
     return res;
 };
 
 var compileBlock = function (block) {
     // Statements always have tags
-    var stmt= block.statement;
+    if (block === undefined || block.statement === undefined)
+        return '';
 
+    var stmt= block.statement;
     switch(stmt.tag) {
         case '=':
             return stmt.left.name + ' = (' +
                 compileExpr(stmt.right) + ');\n';
-        
+
         case 'set':
-            return 'float ' + stmt.left.name + ' = (' +
+            var varName = stmt.left.name;
+            var shouldNotDispType = varName === 'x' || varName === 'y' || varName === 'z';
+
+            return (shouldNotDispType ? '' : 'float ') + varName + ' = (' +
                 compileExpr(stmt.right) + ');\n';
 
         case 'if':

@@ -85,6 +85,13 @@ var evalExpr = function (expr, env) {
 
     // Look at tag to see what to do.
     switch(expr.tag) {
+        case 'and':
+            return evalExpr(expr.left, env) &&
+                   evalExpr(expr.right, env);
+        case 'or':
+            return evalExpr(expr.left, env) ||
+                   evalExpr(expr.right, env);
+
         // Conditionals.
         case '<':
             return evalExpr(expr.left, env) <
@@ -264,6 +271,17 @@ var evalBlock = function (block, env) {
             var noiseVal = lookup(env, '#noise');
 
             gNewestObj = SCENE.addSphere(qVal, transform, bVal, noiseVal);
+            return 0;
+
+        // Cube
+        // {{tag:'cube', q:16 }}
+        case 'cube':
+            var qVal = evalExpr(stmt.q, env);
+            var transform = lookup(env, '#transform');
+            var bVal = lookup(env, '#b');
+            var noiseVal = lookup(env, '#noise');
+
+            gNewestObj = SCENE.addCube(qVal, transform, bVal, noiseVal);
             return 0;
 
         // Lathe

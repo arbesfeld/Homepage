@@ -27,13 +27,11 @@ var defaultEnv = function() {
         function(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; });
 
     addBinding(env, 'PI', Math.PI);
-
+    addBinding(env, 'EPS', 0.001);
 
     addBinding(env, 'lerp', function(v0, v1, t) { return v0+(v1-v0)*t; });
     addBinding(env, 'smoothstep',
-        function(x, edge0, edge1) {
-            edge0 = edge0 || 0;
-            edge1 = edge1 || 1;
+        function(edge0, edge1, x) {
             x = clamp((x - edge0)/(edge1 - edge0), 0.0, 1.0);
             return x*x*x*(x*(x*6-15)+10);
         }

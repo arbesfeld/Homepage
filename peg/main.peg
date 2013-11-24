@@ -109,9 +109,13 @@ statement
     / "rotate " WS x:expression WS y:expression WS z:expression
         { return { tag:"rotate", xExpr:x, yExpr:y, zExpr:z }; }
 
-    // sphere q1 q2
+    // sphere q
     / "sphere " WS q:expression
         { return { tag:"sphere", q:q }; }
+
+    // cube q
+    / "cube " WS q:expression
+        { return { tag:"cube", q:q }; }
 
     // random noise for the block
     / "displacen " WS b:expression WS noise:expression
@@ -141,8 +145,15 @@ ident_list
  */
 
 expression
-    = expr:comparative
+    = expr:composite
         { return expr; }
+
+COMPOSITE_OP = "and" / "or"
+
+composite
+    = left:comparative WS op:COMPOSITE_OP WS right:composite
+        { return { tag: op, left:left, right:right }; }
+    / comparative
 
 COMP_OP = "<=" / ">=" / "!=" / "==" / "<" / ">"
 

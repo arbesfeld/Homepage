@@ -49,6 +49,8 @@ PCG = (function(){
         "comma_identifier": parse_comma_identifier,
         "ident_list": parse_ident_list,
         "expression": parse_expression,
+        "COMPOSITE_OP": parse_COMPOSITE_OP,
+        "composite": parse_composite,
         "COMP_OP": parse_COMP_OP,
         "comparative": parse_comparative,
         "modulo": parse_modulo,
@@ -1402,13 +1404,13 @@ PCG = (function(){
                                           if (result0 === null) {
                                             pos0 = pos;
                                             pos1 = pos;
-                                            if (input.substr(pos, 10) === "displacen ") {
-                                              result0 = "displacen ";
-                                              pos += 10;
+                                            if (input.substr(pos, 5) === "cube ") {
+                                              result0 = "cube ";
+                                              pos += 5;
                                             } else {
                                               result0 = null;
                                               if (reportFailures === 0) {
-                                                matchFailed("\"displacen \"");
+                                                matchFailed("\"cube \"");
                                               }
                                             }
                                             if (result0 !== null) {
@@ -1416,11 +1418,51 @@ PCG = (function(){
                                               if (result1 !== null) {
                                                 result2 = parse_expression();
                                                 if (result2 !== null) {
-                                                  result3 = parse_WS();
-                                                  if (result3 !== null) {
-                                                    result4 = parse_expression();
-                                                    if (result4 !== null) {
-                                                      result0 = [result0, result1, result2, result3, result4];
+                                                  result0 = [result0, result1, result2];
+                                                } else {
+                                                  result0 = null;
+                                                  pos = pos1;
+                                                }
+                                              } else {
+                                                result0 = null;
+                                                pos = pos1;
+                                              }
+                                            } else {
+                                              result0 = null;
+                                              pos = pos1;
+                                            }
+                                            if (result0 !== null) {
+                                              result0 = (function(offset, q) { return { tag:"cube", q:q }; })(pos0, result0[2]);
+                                            }
+                                            if (result0 === null) {
+                                              pos = pos0;
+                                            }
+                                            if (result0 === null) {
+                                              pos0 = pos;
+                                              pos1 = pos;
+                                              if (input.substr(pos, 10) === "displacen ") {
+                                                result0 = "displacen ";
+                                                pos += 10;
+                                              } else {
+                                                result0 = null;
+                                                if (reportFailures === 0) {
+                                                  matchFailed("\"displacen \"");
+                                                }
+                                              }
+                                              if (result0 !== null) {
+                                                result1 = parse_WS();
+                                                if (result1 !== null) {
+                                                  result2 = parse_expression();
+                                                  if (result2 !== null) {
+                                                    result3 = parse_WS();
+                                                    if (result3 !== null) {
+                                                      result4 = parse_expression();
+                                                      if (result4 !== null) {
+                                                        result0 = [result0, result1, result2, result3, result4];
+                                                      } else {
+                                                        result0 = null;
+                                                        pos = pos1;
+                                                      }
                                                     } else {
                                                       result0 = null;
                                                       pos = pos1;
@@ -1437,58 +1479,55 @@ PCG = (function(){
                                                 result0 = null;
                                                 pos = pos1;
                                               }
-                                            } else {
-                                              result0 = null;
-                                              pos = pos1;
-                                            }
-                                            if (result0 !== null) {
-                                              result0 = (function(offset, b, noise) { return { tag:"displacen", b:b, noise:noise}; })(pos0, result0[2], result0[4]);
-                                            }
-                                            if (result0 === null) {
-                                              pos = pos0;
-                                            }
-                                            if (result0 === null) {
-                                              pos0 = pos;
-                                              if (input.substr(pos, 8) === "displace") {
-                                                result0 = "displace";
-                                                pos += 8;
-                                              } else {
-                                                result0 = null;
-                                                if (reportFailures === 0) {
-                                                  matchFailed("\"displace\"");
-                                                }
-                                              }
                                               if (result0 !== null) {
-                                                result0 = (function(offset) { return { tag:"displace" }; })(pos0);
+                                                result0 = (function(offset, b, noise) { return { tag:"displacen", b:b, noise:noise}; })(pos0, result0[2], result0[4]);
                                               }
                                               if (result0 === null) {
                                                 pos = pos0;
                                               }
                                               if (result0 === null) {
                                                 pos0 = pos;
-                                                if (input.substr(pos, 4) === "func") {
-                                                  result0 = "func";
-                                                  pos += 4;
+                                                if (input.substr(pos, 8) === "displace") {
+                                                  result0 = "displace";
+                                                  pos += 8;
                                                 } else {
                                                   result0 = null;
                                                   if (reportFailures === 0) {
-                                                    matchFailed("\"func\"");
+                                                    matchFailed("\"displace\"");
                                                   }
                                                 }
                                                 if (result0 !== null) {
-                                                  result0 = (function(offset) { return { tag:"displaceFunc" }; })(pos0);
+                                                  result0 = (function(offset) { return { tag:"displace" }; })(pos0);
                                                 }
                                                 if (result0 === null) {
                                                   pos = pos0;
                                                 }
                                                 if (result0 === null) {
                                                   pos0 = pos;
-                                                  result0 = parse_expression();
+                                                  if (input.substr(pos, 4) === "func") {
+                                                    result0 = "func";
+                                                    pos += 4;
+                                                  } else {
+                                                    result0 = null;
+                                                    if (reportFailures === 0) {
+                                                      matchFailed("\"func\"");
+                                                    }
+                                                  }
                                                   if (result0 !== null) {
-                                                    result0 = (function(offset, expr) { return { tag:"ignore", body:expr }; })(pos0, result0);
+                                                    result0 = (function(offset) { return { tag:"displaceFunc" }; })(pos0);
                                                   }
                                                   if (result0 === null) {
                                                     pos = pos0;
+                                                  }
+                                                  if (result0 === null) {
+                                                    pos0 = pos;
+                                                    result0 = parse_expression();
+                                                    if (result0 !== null) {
+                                                      result0 = (function(offset, expr) { return { tag:"ignore", body:expr }; })(pos0, result0);
+                                                    }
+                                                    if (result0 === null) {
+                                                      pos = pos0;
+                                                    }
                                                   }
                                                 }
                                               }
@@ -1594,12 +1633,87 @@ PCG = (function(){
         var pos0;
         
         pos0 = pos;
-        result0 = parse_comparative();
+        result0 = parse_composite();
         if (result0 !== null) {
           result0 = (function(offset, expr) { return expr; })(pos0, result0);
         }
         if (result0 === null) {
           pos = pos0;
+        }
+        return result0;
+      }
+      
+      function parse_COMPOSITE_OP() {
+        var result0;
+        
+        if (input.substr(pos, 3) === "and") {
+          result0 = "and";
+          pos += 3;
+        } else {
+          result0 = null;
+          if (reportFailures === 0) {
+            matchFailed("\"and\"");
+          }
+        }
+        if (result0 === null) {
+          if (input.substr(pos, 2) === "or") {
+            result0 = "or";
+            pos += 2;
+          } else {
+            result0 = null;
+            if (reportFailures === 0) {
+              matchFailed("\"or\"");
+            }
+          }
+        }
+        return result0;
+      }
+      
+      function parse_composite() {
+        var result0, result1, result2, result3, result4;
+        var pos0, pos1;
+        
+        pos0 = pos;
+        pos1 = pos;
+        result0 = parse_comparative();
+        if (result0 !== null) {
+          result1 = parse_WS();
+          if (result1 !== null) {
+            result2 = parse_COMPOSITE_OP();
+            if (result2 !== null) {
+              result3 = parse_WS();
+              if (result3 !== null) {
+                result4 = parse_composite();
+                if (result4 !== null) {
+                  result0 = [result0, result1, result2, result3, result4];
+                } else {
+                  result0 = null;
+                  pos = pos1;
+                }
+              } else {
+                result0 = null;
+                pos = pos1;
+              }
+            } else {
+              result0 = null;
+              pos = pos1;
+            }
+          } else {
+            result0 = null;
+            pos = pos1;
+          }
+        } else {
+          result0 = null;
+          pos = pos1;
+        }
+        if (result0 !== null) {
+          result0 = (function(offset, left, op, right) { return { tag: op, left:left, right:right }; })(pos0, result0[0], result0[2], result0[4]);
+        }
+        if (result0 === null) {
+          pos = pos0;
+        }
+        if (result0 === null) {
+          result0 = parse_comparative();
         }
         return result0;
       }
