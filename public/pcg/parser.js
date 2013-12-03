@@ -8,7 +8,7 @@ var gNewestObj = undefined;
 // variable = {neg:true/false, name:name}
 var lookup = function (env, v) {
     if (!(env.hasOwnProperty('bindings')))
-        throw new Error("Env does not have bindings for " + v);
+        throw new Error("Env does not have bindings for " + JSON.stringify(v));
 
     var str = v.hasOwnProperty('name') ? v.name : v;
 
@@ -209,8 +209,8 @@ var evalBlock = function (block, env) {
             return 0;
 
         // Functions.
-        // {expr: { tag:"def", name:"f", args[]}, children:...}
-        case 'def':
+        // {expr: { tag:"function", name:"f", args[]}, children:...}
+        case 'function':
             // the env is passed as "this"
             var newFunc = function() {
                 // This function takes any number of arguments.
@@ -263,7 +263,10 @@ var evalBlock = function (block, env) {
         case 'sphere':
             var qVal = evalExpr(stmt.q, env);
             var transform = lookup(env, '#transform');
-            gNewestObj = SCENE.addSphere(qVal, transform);
+            var sphere = SCENE.addSphere(qVal, transform);
+            gNewestObj = sphere;
+            addBinding(env, '#object', sphere);
+
             return 0;
 
         // Cube
@@ -272,7 +275,10 @@ var evalBlock = function (block, env) {
             var qVal = evalExpr(stmt.q, env);
             var transform = lookup(env, '#transform');
 
-            gNewestObj = SCENE.addCube(qVal, transform);
+            var cube = SCENE.addCube(qVal, transform);
+            gNewestObj = cube;
+            addBinding(env, '#object', cube);
+
             return 0;
 
         // Plane
@@ -281,7 +287,10 @@ var evalBlock = function (block, env) {
             var qVal = evalExpr(stmt.q, env);
             var transform = lookup(env, '#transform');
 
-            gNewestObj = SCENE.addPlane(qVal, transform);
+            var plane = SCENE.addPlane(qVal, transform);
+            gNewestObj = plane;
+            addBinding(env, '#object', plane);
+
             return 0;
 
         // Lathe
@@ -321,8 +330,9 @@ var evalBlock = function (block, env) {
             }
 
             var transform = lookup(env, '#transform');
-
-            gNewestObj = SCENE.addLatheObject(vertArray, transform);
+            var lathe = SCENE.addLatheObject(vertArray, transform);
+            gNewestObj = lathe;
+            addBinding(env, '#object', lathe);
 
             return 0;
 
@@ -341,7 +351,7 @@ var evalBlock = function (block, env) {
                             lookup(newEnv, 'z')];
                 };
             };
-            gNewestObj.addDisplacement(newFunc(env));
+            gNewestObj.geometry.addDisplacement(newFunc(env));
 
             return 0;
 
@@ -366,15 +376,22 @@ var evalBlock = function (block, env) {
             var xMin = evalExpr(stmt.xMin, env);
             var yMin = evalExpr(stmt.yMin, env);
             var zMin = evalExpr(stmt.zMin, env);
-            var xMax = evalExpr(stmt.xMin, env);
+            var xMax = evalExpr(stmt.xMax, env);
             var yMax = evalExpr(stmt.yMax, env);
             var zMax = evalExpr(stmt.zMax, env);
 
-            var transform = gNewestObj.getAttachPoint(xMin, yMin, zMin,
-                                                      xMax, yMax, zMax);
-            var newEnv = newScope(env);
-            addBindings(newEnv, '#transform', transform);
-            evalStatements(block.children, newEnv);
+            // we attach to the most recent object in our scope
+            var object = lookup(env, '#object');
+            var curTransform = lookup(env, '#transform');
+            var transform = object.geometry.getAttachPoint(xMin, yMin, zMin,
+                                                           xMax, yMax, zMax);
+            // if we found a point to attach to
+            if (transform) {
+                var newEnv = newScope(env);
+                var newTransform = new THREE.Matrix4().multiplyMatrices(transform, curTransform);
+                addBinding(newEnv, '#transform', newTransform);
+                evalStatements(block.children, newEnv);
+            }
             return 0;
 
         // Choice
@@ -402,8 +419,8 @@ var evalTranslate = function (xExpr, yExpr, zExpr, env) {
     var tz = evalExpr(zExpr, env);
 
     var curTransform = lookup(env, '#transform');
-    var translateMat = Matrix.Translation(Vector.create([tx, ty, tz]));
-    addBinding(env, '#transform', curTransform.multiply(translateMat));
+    var translateMat = new THREE.Matrix4().makeTranslation(tx, ty, tz);
+    addBinding(env, '#transform', new THREE.Matrix4().multiplyMatrices(translateMat, curTransform));
 };
 
 var evalScale = function (xExpr, yExpr, zExpr, env) {
@@ -411,9 +428,12 @@ var evalScale = function (xExpr, yExpr, zExpr, env) {
     var sy = evalExpr(yExpr, env);
     var sz = evalExpr(zExpr, env);
 
+    if (sx == 0 || sy == 0 || sz == 0)
+        throw new Error("Cannot scale to 0.");
+
     var curTransform = lookup(env, '#transform');
-    var scaleMat = Matrix.Diagonal([sx, sy, sz, 1]);
-    addBinding(env, '#transform', curTransform.multiply(scaleMat));
+    var scaleMat = new THREE.Matrix4().makeScale(sx, sy, sz);
+    addBinding(env, '#transform', new THREE.Matrix4().multiplyMatrices(scaleMat, curTransform));
 };
 
 var evalRotate = function(xExpr, yExpr, zExpr, env) {
@@ -421,13 +441,13 @@ var evalRotate = function(xExpr, yExpr, zExpr, env) {
     var ry = evalExpr(yExpr, env);
     var rz = evalExpr(zExpr, env);
 
-    var rotX = Matrix.RotationX4(rx);
-    var rotY = Matrix.RotationY4(ry);
-    var rotZ = Matrix.RotationZ4(rz);
-
     var curTransform = lookup(env, '#transform');
-    var rotationMat = rotX.multiply(rotY.multiply(rotZ));
-    addBinding(env, '#transform', curTransform.multiply(rotationMat));
+    var rotationX = new THREE.Matrix4().makeRotationX(rx);
+    var rotationY = new THREE.Matrix4().makeRotationY(ry);
+    var rotationZ = new THREE.Matrix4().makeRotationZ(rz);
+    var rotationMat = new THREE.Matrix4().multiplyMatrices(rotationX, rotationY);
+    rotationMat.multiply(rotationZ);
+    addBinding(env, '#transform', new THREE.Matrix4().multiplyMatrices(rotationMat, curTransform));
 };
 
 var evalTransform = function (seq, env) {

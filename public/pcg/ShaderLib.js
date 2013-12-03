@@ -22,32 +22,6 @@ var ShaderLib = {
 		"uniform float refractionRatio;\n" +
 		"uniform bool useRefract;\n" +
 		"#endif\n" +
-		"uniform vec3 ambient;\n" +
-		"uniform vec3 diffuse;\n" +
-		"uniform vec3 emissive;\n" +
-		"uniform vec3 ambientLightColor;\n" +
-		"#if MAX_DIR_LIGHTS > 0\n" +
-		"uniform vec3 directionalLightColor[ MAX_DIR_LIGHTS ];\n" +
-		"uniform vec3 directionalLightDirection[ MAX_DIR_LIGHTS ];\n" +
-		"#endif\n" +
-		"#if MAX_HEMI_LIGHTS > 0\n" +
-		"uniform vec3 hemisphereLightSkyColor[ MAX_HEMI_LIGHTS ];\n" +
-		"uniform vec3 hemisphereLightGroundColor[ MAX_HEMI_LIGHTS ];\n" +
-		"uniform vec3 hemisphereLightDirection[ MAX_HEMI_LIGHTS ];\n" +
-		"#endif\n" +
-		"#if MAX_POINT_LIGHTS > 0\n" +
-		"uniform vec3 pointLightColor[ MAX_POINT_LIGHTS ];\n" +
-		"uniform vec3 pointLightPosition[ MAX_POINT_LIGHTS ];\n" +
-		"uniform float pointLightDistance[ MAX_POINT_LIGHTS ];\n" +
-		"#endif\n" +
-		"#if MAX_SPOT_LIGHTS > 0\n" +
-		"uniform vec3 spotLightColor[ MAX_SPOT_LIGHTS ];\n" +
-		"uniform vec3 spotLightPosition[ MAX_SPOT_LIGHTS ];\n" +
-		"uniform vec3 spotLightDirection[ MAX_SPOT_LIGHTS ];\n" +
-		"uniform float spotLightDistance[ MAX_SPOT_LIGHTS ];\n" +
-		"uniform float spotLightAngleCos[ MAX_SPOT_LIGHTS ];\n" +
-		"uniform float spotLightExponent[ MAX_SPOT_LIGHTS ];\n" +
-		"#endif\n" +
 		"#ifdef WRAP_AROUND\n" +
 		"uniform vec3 wrapRGB;\n" +
 		"#endif\n" +
@@ -230,30 +204,7 @@ var ShaderLib = {
 		"#endif\n" +
 		"}\n" +
 		"#endif\n" +
-		"#if MAX_POINT_LIGHTS > 0\n" +
-		"for( int i = 0; i < MAX_POINT_LIGHTS; i ++ ) {\n" +
-		"vec4 lPosition = viewMatrix * vec4( pointLightPosition[ i ], 1.0 );\n" +
-		"vec3 lVector = lPosition.xyz - mvPosition.xyz;\n" +
-		"float lDistance = 1.0;\n" +
-		"if ( pointLightDistance[ i ] > 0.0 )\n" +
-		"lDistance = 1.0 - min( ( length( lVector ) / pointLightDistance[ i ] ), 1.0 );\n" +
-		"lVector = normalize( lVector );\n" +
-		"float dotProduct = dot( transformedNormal, lVector );\n" +
-		"vec3 pointLightWeighting = vec3( max( dotProduct, 0.0 ) );\n" +
-		"#ifdef DOUBLE_SIDED\n" +
-		"vec3 pointLightWeightingBack = vec3( max( -dotProduct, 0.0 ) );\n" +
-		"#ifdef WRAP_AROUND\n" +
-		"vec3 pointLightWeightingHalfBack = vec3( max( -0.5 * dotProduct + 0.5, 0.0 ) );\n" +
-		"#endif\n" +
-		"#endif\n" +
-		"#ifdef WRAP_AROUND\n" +
-		"vec3 pointLightWeightingHalf = vec3( max( 0.5 * dotProduct + 0.5, 0.0 ) );\n" +
-		"pointLightWeighting = mix( pointLightWeighting, pointLightWeightingHalf, wrapRGB );\n" +
-		"#ifdef DOUBLE_SIDED\n" +
-		"pointLightWeightingBack = mix( pointLightWeightingBack, pointLightWeightingHalfBack, wrapRGB );\n" +
-		"#endif\n" +
-		"#endif\n" +
-		"vLightFront += pointLightColor[ i ] * pointLightWeighting * lDistance;\n" +
+
 		"#ifdef DOUBLE_SIDED\n" +
 		"vLightBack += pointLightColor[ i ] * pointLightWeightingBack * lDistance;\n" +
 		"#endif\n" +

@@ -70,12 +70,12 @@ statement
     / "<3" [^\n]* { return undefined; }
 
     // function()
-    / "def " WS v:identifier "(" WS ")"
-        { return { tag:"def", name:v, args:[]}; }
+    / "function " WS v:identifier "(" WS ")"
+        { return { tag:"function", name:v, args:[]}; }
 
     // function(args)
-    / "def " WS v:identifier WS "(" WS args:ident_list WS ")"
-        { return { tag:"def", name:v, args:args }; }
+    / "function " WS v:identifier WS "(" WS args:ident_list WS ")"
+        { return { tag:"function", name:v, args:args }; }
 
     // if
     / "if " WS expr:expression
@@ -135,7 +135,7 @@ statement
 
     // attach to a vertex that is in x = [xMin, xMax] etc
     / "attach " WS xMin:expression WS yMin:expression WS zMin:expression
-                WS xMax:expression WS xMax:expression WS xMax:expression
+                WS xMax:expression WS yMax:expression WS zMax:expression
         { return { tag:"attach", xMin:xMin, yMin:yMin, zMin:zMin, xMax:xMax, yMax:yMax, zMax:zMax }; }
 
     // generic expression

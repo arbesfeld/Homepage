@@ -8,20 +8,88 @@ var postProcess = function () {
     return 'vec3 displacedPosition = vec3(x, y, z);\n';
 };
 
-THREE.Mesh.prototype.addDisplacement = function (mapFunc) {
-    var geometry = this.geometry;
-    for (var i = 0; i < geometry.vertices.length; i++) {
-        geometry.vertices[i].set.apply(geometry.vertices[i], mapFunc(geometry.vertices[i].x,
-                                         geometry.vertices[i].y,
-                                         geometry.vertices[i].z));
+// Load a file |file| and return |callback| when the file has been loaded
+// |noCache| specifies whether the url should be cached
+// |isJSON| specifies whether the file is a JSON
+function loadFile(file, callback, noCache, isJSON) {
+    var request = new XMLHttpRequest();
+    request.onreadystatechange = function() {
+        if (request.readyState == 1) {
+            if (isJSON) {
+                request.overrideMimeType('application/json');
+            }
+            request.send();
+        } else if (request.readyState == 4) {
+            if (request.status == 200) {
+                callback(request.responseText);
+            } else if (request.status == 404) {
+                throw 'File "' + file + '" does not exist.';
+            } else {
+                throw 'XHR error ' + request.status + '.';
+            }
+        }
+    };
+    var url = file;
+    if (noCache) {
+        url += '?' + (new Date()).getTime();
     }
-    geometry.verticesNeedUpdate = true;
-    geometry.normalsNeedUpdate = true;
-    geometry.mergeVertices();
-    geometry.computeCentroids();
-    geometry.computeFaceNormals();
-    geometry.computeVertexNormals();
+    request.open('GET', url, true);
 };
+
+THREE.Geometry.prototype.addDisplacement = function (mapFunc) {
+    for (var i = 0; i < this.vertices.length; i++) {
+        this.vertices[i].set.apply(this.vertices[i], mapFunc(this.vertices[i].x,
+                                         this.vertices[i].y,
+                                         this.vertices[i].z));
+    }
+    this.verticesNeedUpdate = true;
+    this.normalsNeedUpdate = true;
+    this.mergeVertices();
+    this.computeCentroids();
+    this.computeFaceNormals();
+    this.computeVertexNormals();
+};
+
+THREE.Geometry.prototype.getAttachPoint = function (xMin, yMin, zMin, xMax, yMax, zMax) {
+    var face, vert;
+    var finalVert = undefined;
+    var normal = undefined;
+    for (var i = 0; i < this.faces.length; i++) {
+        face = this.faces[i];
+        vert = this.vertices[face.a].add(this.vertices[face.b]).add(this.vertices[face.c]).multiplyScalar(1/3);
+        if (vert.x + 0.005 >= xMin &&
+            vert.y + 0.005 >= yMin &&
+            vert.z + 0.005 >= zMin &&
+            vert.x - 0.005 <= xMax &&
+            vert.y - 0.005 <= yMax &&
+            vert.z - 0.005 <= zMax) {
+            finalVert = vert;
+            normal = face.vertexNormals[0].add(face.vertexNormals[1]).add(face.vertexNormals[2]).multiplyScalar(1/3);
+            break;
+        }
+    }
+
+    if (finalVert && normal) {
+        var xyLength = Math.sqrt(normal.x*normal.x + normal.y*normal.y);
+        var zAngle, xAngle;
+        // will be 0 when vec is pointing along the +z or -z axis
+        if (xyLength == 0) {
+            zAngle = normal.x > 0 ? Math.PI/2 : -Math.PI/2;
+        } else {
+            zAngle = Math.acos(normal.y / xyLength);
+        }
+
+        xAngle = Math.acos(xyLength);
+        xAngle = normal.z > 0 ? xAngle : -xAngle;
+        zAngle = normal.x > 0 ? -zAngle : zAngle;
+
+        var translateMat = new THREE.Matrix4().makeTranslation(finalVert.x, finalVert.y, finalVert.z);
+        var xRotation = new THREE.Matrix4().makeRotationX(xAngle);
+        var zRotation = new THREE.Matrix4().makeRotationZ(zAngle);
+        return translateMat.multiply(xRotation.multiply(zRotation));
+    }
+};
+
 THREE.Mesh.prototype.addVDisplacement = function (str) {
     if (!this.displacementString)
         this.displacementString = '';
@@ -33,6 +101,7 @@ THREE.Mesh.prototype.addDisplacementNoise = function (noiseVal) {
     this.noise = noiseVal;
     this.setMaterial();
 };
+
 
 THREE.Mesh.prototype.setMaterial = function () {
     var displacementString = this.displacementString || '';

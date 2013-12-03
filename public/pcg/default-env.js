@@ -37,12 +37,14 @@ var defaultEnv = function() {
         }
     );
 
+    addBinding(env, '#transform', new THREE.Matrix4());
+    addBinding(env, '#object', undefined);
+
     // these do not work in node
     if (typeof module === 'undefined') {
         addBinding(env, 'alert', alert);
 
         // uniforms
-        addBinding(env, '#transform', Matrix.I(4));
         addBinding(env, '#b', 0.0);
         addBinding(env, '#noise', 0.0);
     }

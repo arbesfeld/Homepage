@@ -14,15 +14,32 @@ function transformMesh(mesh, transform) {
     mesh.matrixAutoUpdate = false;
 
     var meshMatrix = mesh.matrixWorld.clone();
-    var updateMatrix = construct(THREE.Matrix4, transform.transpose().flatten());
-    mesh.matrix.multiply(meshMatrix.multiply(updateMatrix));
+    mesh.matrix.multiply(meshMatrix.multiply(transform));
 }
+
+Scene.prototype.resizeCanvas = function() {
+   // only change the size of the canvas if the size it's being displayed
+   // has changed.
+
+    var $container = $('#canvas');
+
+    this.WIDTH = $container.width();
+    this.HEIGHT = $container.height();
+
+    this.renderer.setSize(this.WIDTH, this.HEIGHT);
+    console.log("hi");
+};
 
 function Scene(callback) {
     // set the scene size
-    this.WIDTH = 700;
-    this.HEIGHT = 400;
-    this.SCALE = 10;
+    this.SCALE = 1;
+
+    // get the DOM element to attach to
+    // - assume we've got jQuery to hand
+    var $container = $('#canvas');
+
+    this.WIDTH = $container.width();
+    this.HEIGHT = $container.height();
 
     // set some camera attributes
     var VIEW_ANGLE = 45,
@@ -30,11 +47,7 @@ function Scene(callback) {
       NEAR = 0.1,
       FAR = 10000;
 
-    // get the DOM element to attach to
-    // - assume we've got jQuery to hand
-    var $container = $('#container');
-
-    this.renderer = new THREE.WebGLRenderer();
+    this.renderer = new THREE.WebGLRenderer({ antialias: true });
 
     // start the renderer
     this.renderer.setSize(this.WIDTH, this.HEIGHT);
@@ -51,9 +64,9 @@ function Scene(callback) {
 
     // the camera starts at 0,0,0
     // so pull it back
-    this.camera.position.z = 30;
-    this.camera.position.x = 30;
-    this.camera.position.y = 30;
+    this.camera.position.x = 10;
+    this.camera.position.y = 10;
+    this.camera.position.z = 10;
 
     this.controls = new THREE.OrbitControls(this.camera);
 
@@ -64,20 +77,19 @@ function Scene(callback) {
 
     function shaderLoaded(shader) {
         return function(str) {
-            shader.valueOf = shader.toSource = shader.toString
-                = function() { return str };
+            shader.valueOf = shader.toSource = shader.toString = function() { return str; };
 
             if (this.fsDefault.valueOf() !== "") {
                 // all shaders have loaded, we are done with init
                 callback();
             }
-        }
-    };
+        };
+    }
 
     loadFile("shaders/fs-default.txt", shaderLoaded(this.fsDefault).bind(this), false);
 
     this.fireTexture = new THREE.ImageUtils.loadTexture( 'images/explosion.png' );
-};
+}
 
 Scene.prototype.init = function() {
     this.scene = new THREE.Scene();
@@ -140,7 +152,7 @@ Scene.prototype.animate = function() {
 // transform = transform of sphere
 Scene.prototype.addSphere = function(q, transform) {
     var sphere = new THREE.Mesh(
-      new THREE.SphereGeometry(this.SCALE, q, q),
+      new THREE.SphereGeometry(this.SCALE/2, q, q),
       new THREE.MeshBasicMaterial());
 
     sphere.fshader = this.fsDefault;
@@ -162,7 +174,6 @@ Scene.prototype.addCube = function(q, transform) {
     cube.setMaterial();
 
     this.scene.add(cube);
-    this.render();
 
     return cube;
 };
@@ -175,9 +186,9 @@ Scene.prototype.addPlane = function(q, transform) {
     plane.fshader = this.fsDefault;
     transformMesh(plane, transform);
     plane.setMaterial();
+    plane.material.side = THREE.DoubleSide;
 
     this.scene.add(plane);
-    this.render();
 
     return plane;
 };
@@ -196,7 +207,6 @@ Scene.prototype.addLatheObject = function (radiiArray, transform) {
     transformMesh(lathe, transform);
 
     this.scene.add(lathe);
-    this.render();
 
     return lathe;
 };

@@ -1,24 +1,80 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Demo</title>
+  <title>PCG</title>
 
-  <style type="text/css" media="screen">
-    #editor {
-        width: 700px;
-        height: 400px;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        left: 0;
-    }
-  </style>
+    <style type="text/css">
+      body {
+        position: relative;
+        margin: 0px;
+        padding: 0px;
+        height: 100%;
+        background-color: #AAA;
+      }
+      div.column1 {
+        position: absolute; /* Pulls it out of the normal flow */
+        left: 0px;          /* Places it on the top-left       */
+        top: 0px;
+        width: 300px;       /* Width is exactly 300px          */
+        height: 100%;
+        overflow-y: auto;
+      }
+      div.column-divider {
+        position: absolute;
+        background-color: #AAA;
+        height: 100%;
+        top: 0px;
+        left: 300px;
+        width: 3px;
+        cursor: col-resize;
+      }
+      div.column2 {
+        position: relative; /* Leave in normal flow so the     */
+                            /* width can be full width         */
+        right: 0px;         /* Places it on the top-right      */
+                            /* (leaving left also works)       */
+        top: 0px;
+        height: 100%;
+        margin-left: 303px; /* Left margin pushes over for the */
+                            /* other columns to have space     */
+        overflow-y: auto;
+      }
+      .button {
+        font: bold 13px "Helvetica Neue", Helvetica, Arial, clean, sans-serif !important;
+        text-shadow: 0 -1px 1px rgba(0,0,0,0.25), -2px 0 1px rgba(0,0,0,0.25);
+        border-radius: 5px;
+        -moz-border-radius: 5px;
+        -webkit-border-radius: 5px;
+        -moz-box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        -webkit-box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        display: inline-block;
+        color: white;
+        padding: 5px 10px 5px;
+        white-space: nowrap;
+        text-decoration: none;
+        cursor: pointer;
+        background: #A9014B scroll 0 0;
+        border-style: none;
+        text-align: center;
+        overflow: visible;
+      }
+
+      .button:hover,
+      .button:focus {
+        background-position: 0 -50px;
+        color: white;
+      }
+
+      .button:active {
+        background-position: 0 -100px;
+        -moz-box-shadow: inset 0 1px 2px rgba(0,0,0,0.7);
+        -webkit-box-shadow: none;
+      }
+    </style>
 
   <!-- js -->
   <script src="js/jquery-2.0.3.min.js"></script>
   <script src="js/three.min.js"></script>
-  <script src="js/sylvester.src.js"></script>
-  <script src="js/glUtils.js"></script>
   <script src="js/seedrandom.js"></script>
   <script src="js/OrbitControls.js"></script>
   <script src="js/ace-builds/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
@@ -30,6 +86,7 @@
   <script src="pcg/ShaderLib.js"></script>
   <script src="pcg/CustomLatheGeometry.js"></script>
   <script src="pcg/three-additions.js"></script>
+  <script src="pcg/jquery-ui-1.10.3.custom.min.js"></script>
 
     <script type="x-shader/x-fragment" id="vertexShaderStart">
 
@@ -253,47 +310,34 @@
 </head>
 <body>
 
-<div id="editor">def radius(y, t, p)
-  return abs(y-.5)^p
-
-def engine(size)
-  loop i 1 size
-    transform 0 0 0 1 sqrt(i) 1
-      lathe 20 20
-        return y*radius(y, t, (i*i)/10) + y*(1-y)
-
-def engines()
-  transform 0 0 0-1
-    transform -.5 0 0 .5 .5 .5 PI/2 0 0
-      engine(5)
-    transform .5 0 0 .5 .5 .5 PI/2 0 0
-      engine(5)
-
-def hull()
-  transform 0 0-.2 1 1 2 1 PI/2 3*PI/2 0
-    lathe 50 50
-      return (y^.1)/(1+abs(PI - t))
-
-def fins(count)
-  loop i 0 count-1
-    transform 0 0 i*.3-.5 .6/(i+1)^.2 .1 1/(i+1)^.3 PI/2 0 0
-      lathe 20 8
-        return 1
-
-engines()
-scale 2 2 2
-  hull()
-  displace
-    if abs(0.1-y%.2) < .05
-      set z z*0.6
-    if abs(y) < .1
-      if abs(1.5-z) < .5
-        set x x*.5
-fins(12)
+<div class="column1">
+  <div id="editor" style="min-height:96%; padding:0; margin:0;"></div>
+  <input id="submitbutton" type="submit" class="button" style="width:100%" value="Run"/>
 </div>
-
-<input id="submitbutton" type="button" value="Run" />
-<div id="container" style="width:700px; height:500px; background-color: #eee;"></div>
+<div class="column-divider">
+  <script>
+    $(document).ready(function() {
+      $("div.column-divider").draggable({
+        axis: 'x', // only allow horizontal movement
+        drag: function(event, ui) {
+          // adjust column1 as they drag
+          $('div.column1').width($(this).offset().left);
+          $('div.column2').css('margin-left',
+              $(this).offset().left + $(this).width());
+        },
+        stop: function(event, ui) {
+          // one more time to ensure it's right when they stop
+          $('div.column1').width($(this).offset().left);
+          $('div.column2').css('margin-left',
+              $(this).offset().left + $(this).width());
+        }
+      });
+    });
+  </script>
+</div>
+<div class="column2">
+  <div id="canvas" style="height:100%; background-color:#eee"></div>
+</div>
 
 <script>
 
@@ -307,31 +351,32 @@ var SCENE; // my custom scene object
 
 // After scene load
 var loaded = function() {
-    $('#submitbutton').click(function() {
-        var user_text = editor.getValue() + "\n";
-        $('#console').html('');
+  window.addEventListener('resize', SCENE.resizeCanvas);
+  $('#submitbutton').click(function() {
+      var user_text = editor.getValue() + "\n";
+      $('#console').html('');
+      // try {
+        var parsed = PCG.parse(user_text);
         // try {
-          var parsed = PCG.parse(user_text);
-          // try {
-              SCENE.init();
-              var result = evalStatements(parsed, defaultEnv());
-          // }
-        //   catch(e) {
-        //     var stack = e.stack.replace(/^[^\(]+?[\n$]/gm, '')
-        //       .replace(/^\s+at\s+/gm, '')
-        //       .replace(/^Object.<anonymous>\s*\(/gm, '{anonymous}()@')
-        //       .split('\n');
-        //       console.log(e + '\n' + 'Eval Error: ' + stack);
-        //   }
+            SCENE.init();
+            var result = evalStatements(parsed, defaultEnv());
         // }
-        // catch(e) {
-        //     var stack = e.stack.replace(/^[^\(]+?[\n$]/gm, '')
-        //       .replace(/^\s+at\s+/gm, '')
-        //       .replace(/^Object.<anonymous>\s*\(/gm, '{anonymous}()@')
-        //       .split('\n');
-        //     console.log(e + '\n' + 'Parse Error: ' + stack);
-        // }
-    });
+      //   catch(e) {
+      //     var stack = e.stack.replace(/^[^\(]+?[\n$]/gm, '')
+      //       .replace(/^\s+at\s+/gm, '')
+      //       .replace(/^Object.<anonymous>\s*\(/gm, '{anonymous}()@')
+      //       .split('\n');
+      //       console.log(e + '\n' + 'Eval Error: ' + stack);
+      //   }
+      // }
+      // catch(e) {
+      //     var stack = e.stack.replace(/^[^\(]+?[\n$]/gm, '')
+      //       .replace(/^\s+at\s+/gm, '')
+      //       .replace(/^Object.<anonymous>\s*\(/gm, '{anonymous}()@')
+      //       .split('\n');
+      //     console.log(e + '\n' + 'Parse Error: ' + stack);
+      // }
+  });
 };
 
 SCENE = new Scene(loaded);

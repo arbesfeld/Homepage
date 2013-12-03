@@ -494,7 +494,7 @@ PCG = (function(){
       }
       
       function parse_statement() {
-        var result0, result1, result2, result3, result4, result5, result6, result7, result8;
+        var result0, result1, result2, result3, result4, result5, result6, result7, result8, result9, result10, result11, result12;
         var pos0, pos1, pos2, pos3;
         
         pos0 = pos;
@@ -783,13 +783,13 @@ PCG = (function(){
                     if (result0 === null) {
                       pos0 = pos;
                       pos1 = pos;
-                      if (input.substr(pos, 4) === "def ") {
-                        result0 = "def ";
-                        pos += 4;
+                      if (input.substr(pos, 9) === "function ") {
+                        result0 = "function ";
+                        pos += 9;
                       } else {
                         result0 = null;
                         if (reportFailures === 0) {
-                          matchFailed("\"def \"");
+                          matchFailed("\"function \"");
                         }
                       }
                       if (result0 !== null) {
@@ -845,7 +845,7 @@ PCG = (function(){
                         pos = pos1;
                       }
                       if (result0 !== null) {
-                        result0 = (function(offset, v) { return { tag:"def", name:v, args:[]}; })(pos0, result0[2]);
+                        result0 = (function(offset, v) { return { tag:"function", name:v, args:[]}; })(pos0, result0[2]);
                       }
                       if (result0 === null) {
                         pos = pos0;
@@ -853,13 +853,13 @@ PCG = (function(){
                       if (result0 === null) {
                         pos0 = pos;
                         pos1 = pos;
-                        if (input.substr(pos, 4) === "def ") {
-                          result0 = "def ";
-                          pos += 4;
+                        if (input.substr(pos, 9) === "function ") {
+                          result0 = "function ";
+                          pos += 9;
                         } else {
                           result0 = null;
                           if (reportFailures === 0) {
-                            matchFailed("\"def \"");
+                            matchFailed("\"function \"");
                           }
                         }
                         if (result0 !== null) {
@@ -933,7 +933,7 @@ PCG = (function(){
                           pos = pos1;
                         }
                         if (result0 !== null) {
-                          result0 = (function(offset, v, args) { return { tag:"def", name:v, args:args }; })(pos0, result0[2], result0[6]);
+                          result0 = (function(offset, v, args) { return { tag:"function", name:v, args:args }; })(pos0, result0[2], result0[6]);
                         }
                         if (result0 === null) {
                           pos = pos0;
@@ -1545,17 +1545,96 @@ PCG = (function(){
                                                     }
                                                     if (result0 === null) {
                                                       pos0 = pos;
-                                                      if (input.substr(pos, 4) === "func") {
-                                                        result0 = "func";
-                                                        pos += 4;
+                                                      pos1 = pos;
+                                                      if (input.substr(pos, 7) === "attach ") {
+                                                        result0 = "attach ";
+                                                        pos += 7;
                                                       } else {
                                                         result0 = null;
                                                         if (reportFailures === 0) {
-                                                          matchFailed("\"func\"");
+                                                          matchFailed("\"attach \"");
                                                         }
                                                       }
                                                       if (result0 !== null) {
-                                                        result0 = (function(offset) { return { tag:"displaceFunc" }; })(pos0);
+                                                        result1 = parse_WS();
+                                                        if (result1 !== null) {
+                                                          result2 = parse_expression();
+                                                          if (result2 !== null) {
+                                                            result3 = parse_WS();
+                                                            if (result3 !== null) {
+                                                              result4 = parse_expression();
+                                                              if (result4 !== null) {
+                                                                result5 = parse_WS();
+                                                                if (result5 !== null) {
+                                                                  result6 = parse_expression();
+                                                                  if (result6 !== null) {
+                                                                    result7 = parse_WS();
+                                                                    if (result7 !== null) {
+                                                                      result8 = parse_expression();
+                                                                      if (result8 !== null) {
+                                                                        result9 = parse_WS();
+                                                                        if (result9 !== null) {
+                                                                          result10 = parse_expression();
+                                                                          if (result10 !== null) {
+                                                                            result11 = parse_WS();
+                                                                            if (result11 !== null) {
+                                                                              result12 = parse_expression();
+                                                                              if (result12 !== null) {
+                                                                                result0 = [result0, result1, result2, result3, result4, result5, result6, result7, result8, result9, result10, result11, result12];
+                                                                              } else {
+                                                                                result0 = null;
+                                                                                pos = pos1;
+                                                                              }
+                                                                            } else {
+                                                                              result0 = null;
+                                                                              pos = pos1;
+                                                                            }
+                                                                          } else {
+                                                                            result0 = null;
+                                                                            pos = pos1;
+                                                                          }
+                                                                        } else {
+                                                                          result0 = null;
+                                                                          pos = pos1;
+                                                                        }
+                                                                      } else {
+                                                                        result0 = null;
+                                                                        pos = pos1;
+                                                                      }
+                                                                    } else {
+                                                                      result0 = null;
+                                                                      pos = pos1;
+                                                                    }
+                                                                  } else {
+                                                                    result0 = null;
+                                                                    pos = pos1;
+                                                                  }
+                                                                } else {
+                                                                  result0 = null;
+                                                                  pos = pos1;
+                                                                }
+                                                              } else {
+                                                                result0 = null;
+                                                                pos = pos1;
+                                                              }
+                                                            } else {
+                                                              result0 = null;
+                                                              pos = pos1;
+                                                            }
+                                                          } else {
+                                                            result0 = null;
+                                                            pos = pos1;
+                                                          }
+                                                        } else {
+                                                          result0 = null;
+                                                          pos = pos1;
+                                                        }
+                                                      } else {
+                                                        result0 = null;
+                                                        pos = pos1;
+                                                      }
+                                                      if (result0 !== null) {
+                                                        result0 = (function(offset, xMin, yMin, zMin, xMax, yMax, zMax) { return { tag:"attach", xMin:xMin, yMin:yMin, zMin:zMin, xMax:xMax, yMax:yMax, zMax:zMax }; })(pos0, result0[2], result0[4], result0[6], result0[8], result0[10], result0[12]);
                                                       }
                                                       if (result0 === null) {
                                                         pos = pos0;
