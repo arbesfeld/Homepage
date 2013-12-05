@@ -20,6 +20,8 @@ function transformMesh(mesh, transform) {
 Scene.prototype.resizeCanvas = function() {
    // only change the size of the canvas if the size it's being displayed
    // has changed.
+    if (!this.renderer)
+        return;
 
     var $container = $('#canvas');
 
@@ -27,7 +29,8 @@ Scene.prototype.resizeCanvas = function() {
     this.HEIGHT = $container.height();
 
     this.renderer.setSize(this.WIDTH, this.HEIGHT);
-    console.log("hi");
+    this.camera.aspect = this.WIDTH / this.HEIGHT;
+    this.camera.updateProjectionMatrix();
 };
 
 function Scene(callback) {
@@ -107,6 +110,8 @@ Scene.prototype.init = function() {
     dirLight.position.set( -1, 0.75, 1 );
     dirLight.position.multiplyScalar( 50);
     dirLight.name = "dirlight";
+    dirLight.castShadow = true;
+    dirLight.shadowDarkness = 0.5;
     // dirLight.shadowCameraVisible = true;
 
     this.scene.add( dirLight );
@@ -124,6 +129,8 @@ Scene.prototype.init = function() {
     dirLight.shadowCameraFar = 3500;
     dirLight.shadowBias = -0.0001;
     dirLight.shadowDarkness = 0.35;
+
+    this.geometry = [];
 
     // // add subtle blue ambient lighting
     // var ambientLight = new THREE.AmbientLight(0x000044);
@@ -159,6 +166,7 @@ Scene.prototype.addSphere = function(q, transform) {
     transformMesh(sphere, transform);
     sphere.setMaterial();
 
+    this.geometry.push(sphere);
     this.scene.add(sphere);
     this.render();
     return sphere;
@@ -173,8 +181,9 @@ Scene.prototype.addCube = function(q, transform) {
     transformMesh(cube, transform);
     cube.setMaterial();
 
+    this.geometry.push(cube);
     this.scene.add(cube);
-
+    this.render();
     return cube;
 };
 
@@ -188,7 +197,9 @@ Scene.prototype.addPlane = function(q, transform) {
     plane.setMaterial();
     plane.material.side = THREE.DoubleSide;
 
+    this.geometry.push(plane);
     this.scene.add(plane);
+    this.render();
 
     return plane;
 };
@@ -206,7 +217,9 @@ Scene.prototype.addLatheObject = function (radiiArray, transform) {
 
     transformMesh(lathe, transform);
 
+    this.geometry.push(lathe);
     this.scene.add(lathe);
+    this.render();
 
     return lathe;
 };
@@ -214,3 +227,91 @@ Scene.prototype.addLatheObject = function (radiiArray, transform) {
 Scene.prototype.setSeed = function (seedName) {
     Math.seedrandom(seedName);
 };
+
+var vNum = 0;
+Scene.prototype.export = function() {
+    if (!this.geometry)
+        return;
+    var res;
+    var zip = new JSZip();
+    var geometry = new THREE.Geometry();
+    for (var i = 0; i < this.geometry.length; i++) {
+        THREE.GeometryUtils.merge(geometry, this.geometry[i]);
+    }
+    res = stlFromGeometry(geometry);
+    zip.file("object.stl", res);
+    var content = zip.generate({type:"blob"});
+    // var blob = new Blob([content], {type: "text/plain;charset=utf-8"});
+    saveAs(content, "object.zip");
+    // location.href = "data:application/zip;base64," + content;
+};
+
+
+function stlFromGeometry( geometry ) {
+        // var mat = geometry.matrixWorld;
+        // var imat = new THREE.Matrix4().getInverse(mat);
+        // image = imat.transpose();
+        // calculate the faces and normals if they are not yet present
+        // geometry.geometry.computeFaceNormals();
+
+        var facetToStl = function( verts, normal ) {
+                var faceStl = '';
+                // var normal = normal.applyMatrix4(imat);
+                faceStl += 'facet normal ' + normal.x + ' ' + normal.y + ' ' +  normal.z + '\n';
+                faceStl += 'outer loop\n';
+
+                for ( var j = 0; j < 3; j++ ) {
+                        var vert = verts[j];
+                        // vert = vert.applyMatrix4(mat);
+                        faceStl += 'vertex ' + (vert.x) + ' ' + (vert.y) + ' ' + (vert.z) + '\n';
+                }
+
+                faceStl += 'endloop\n';
+                faceStl += 'endfacet\n';
+
+                return faceStl;
+        };
+
+        // start bulding the STL string
+        var stl = '';
+        stl += 'solid\n';
+
+        for ( var i = 0; i < geometry.faces.length; i++ ) {
+                var face = geometry.faces[i];
+
+                // if we have just a griangle, that's easy. just write them to the file
+                if ( face.d === undefined ) {
+                        var verts = [
+                                geometry.vertices[ face.a ],
+                                geometry.vertices[ face.b ],
+                                geometry.vertices[ face.c ]
+                        ];
+
+                        stl += facetToStl( verts, face.normal );
+
+                } else {
+                        // if it's a quad, we need to triangulate it first
+                        // split the quad into two triangles: abd and bcd
+                        var verts = [];
+                        verts[0] = [
+                                geometry.vertices[ face.a ],
+                                geometry.vertices[ face.b ],
+                                geometry.vertices[ face.d ]
+                        ];
+                        verts[1] = [
+                                geometry.vertices[ face.b ],
+                                geometry.vertices[ face.c ],
+                                geometry.vertices[ face.d ]
+                        ];
+
+                        for ( var k = 0; k<2; k++ ) {
+                                stl += facetToStl( verts[k], face.normal );
+                        }
+
+                }
+        }
+
+        stl += 'endsolid\n';
+
+        return stl;
+}

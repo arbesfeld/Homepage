@@ -17,8 +17,8 @@ module.exports = function(io) {
       res.render('index');
     },
 
-    pcgDemo: function(req, res) {
-      res.render('pcg/pcgDemo');
+    kiwi: function(req, res) {
+      res.render('pcg/kiwi');
     },
 
     tiltGame: function(req, res) {

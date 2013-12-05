@@ -1511,34 +1511,34 @@ PCG = (function(){
                                                 }
                                                 if (result0 === null) {
                                                   pos0 = pos;
-                                                  if (input.substr(pos, 8) === "displace") {
-                                                    result0 = "displace";
-                                                    pos += 8;
+                                                  if (input.substr(pos, 9) === "displacev") {
+                                                    result0 = "displacev";
+                                                    pos += 9;
                                                   } else {
                                                     result0 = null;
                                                     if (reportFailures === 0) {
-                                                      matchFailed("\"displace\"");
+                                                      matchFailed("\"displacev\"");
                                                     }
                                                   }
                                                   if (result0 !== null) {
-                                                    result0 = (function(offset) { return { tag:"displace" }; })(pos0);
+                                                    result0 = (function(offset) { return { tag:"displacev" }; })(pos0);
                                                   }
                                                   if (result0 === null) {
                                                     pos = pos0;
                                                   }
                                                   if (result0 === null) {
                                                     pos0 = pos;
-                                                    if (input.substr(pos, 9) === "displacev") {
-                                                      result0 = "displacev";
-                                                      pos += 9;
+                                                    if (input.substr(pos, 8) === "displace") {
+                                                      result0 = "displace";
+                                                      pos += 8;
                                                     } else {
                                                       result0 = null;
                                                       if (reportFailures === 0) {
-                                                        matchFailed("\"displacev\"");
+                                                        matchFailed("\"displace\"");
                                                       }
                                                     }
                                                     if (result0 !== null) {
-                                                      result0 = (function(offset) { return { tag:"displacev" }; })(pos0);
+                                                      result0 = (function(offset) { return { tag:"displace" }; })(pos0);
                                                     }
                                                     if (result0 === null) {
                                                       pos = pos0;

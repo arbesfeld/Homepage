@@ -126,12 +126,12 @@ statement
         { return { tag:"displacen", noise:noise}; }
 
     // a displace block remaps the x,y,z variables
-    / "displace"
-        { return { tag:"displace" }; }
-
-    // a displace block remaps the x,y,z variables
     / "displacev"
         { return { tag:"displacev" }; }
+
+    // a displace block remaps the x,y,z variables
+    / "displace"
+        { return { tag:"displace" }; }
 
     // attach to a vertex that is in x = [xMin, xMax] etc
     / "attach " WS xMin:expression WS yMin:expression WS zMin:expression

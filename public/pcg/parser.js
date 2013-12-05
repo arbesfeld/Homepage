@@ -369,7 +369,7 @@ var evalBlock = function (block, env) {
             return 0;
 
         // find a vertex on the object and transform the next object by its
-        // position and normal
+        // position and normal4
         // {statement:{tag:'attach', xMin:expr, yMin:expr, zMin:expr
         // xMax:expr, yMax:expr, zMax:expr }, children:{}}
         case 'attach':
@@ -433,7 +433,7 @@ var evalScale = function (xExpr, yExpr, zExpr, env) {
 
     var curTransform = lookup(env, '#transform');
     var scaleMat = new THREE.Matrix4().makeScale(sx, sy, sz);
-    addBinding(env, '#transform', new THREE.Matrix4().multiplyMatrices(scaleMat, curTransform));
+    addBinding(env, '#transform', new THREE.Matrix4().multiplyMatrices(curTransform, scaleMat));
 };
 
 var evalRotate = function(xExpr, yExpr, zExpr, env) {
@@ -454,7 +454,6 @@ var evalTransform = function (seq, env) {
     if (seq.length % 3 != 0 || seq.length == 0 || seq.length > 9)
         throw new Error('Invalid transform of length ' + seq.length);
 
-    evalTranslate(seq[0], seq[1], seq[2], env);
 
     if (seq.length == 9) {
         evalRotate(seq[6], seq[7], seq[8], env);
@@ -463,6 +462,7 @@ var evalTransform = function (seq, env) {
     if (seq.length >= 6) {
         evalScale(seq[3], seq[4], seq[5], env);
     }
+    evalTranslate(seq[0], seq[1], seq[2], env);
 };
 
 var evalFunction = function (seq, env) {
@@ -498,7 +498,6 @@ var evalStatements = function (seq, env) {
 // Evaluate one of the options according to their probability.
 var evalOptions = function (options, env) {
     var i;
-    var newEnv = newScope(env);
     var total = 0;
 
     // sum up the total choice amount
@@ -519,7 +518,7 @@ var evalOptions = function (options, env) {
         currentTotal += evalExpr(options[i].statement.expr, env);
         if (rand <= currentTotal / total) {
             // do this option
-            val = evalStatements(options[i].children, newEnv);
+            val = evalStatements(options[i].children, env);
             break;
         }
     }

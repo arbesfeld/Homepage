@@ -44,8 +44,8 @@ THREE.Geometry.prototype.addDisplacement = function (mapFunc) {
     }
     this.verticesNeedUpdate = true;
     this.normalsNeedUpdate = true;
-    this.mergeVertices();
-    this.computeCentroids();
+    // this.mergeVertices();
+    // this.computeCentroids();
     this.computeFaceNormals();
     this.computeVertexNormals();
 };
@@ -144,4 +144,61 @@ THREE.Mesh.prototype.setMaterial = function () {
         });
     }
     this.material.needsUpdate = true;
+};
+
+
+THREE.Geometry.prototype.myComputeVertexNormals = function() {
+
+        var v, vl, f, fl, face, vertices;
+
+        // create internal buffers for reuse when calling this method repeatedly
+        // (otherwise memory allocation / deallocation every frame is big resource hog)
+
+        if ( this.__tmpVertices === undefined ) {
+
+                this.__tmpVertices = new Array( this.vertices.length );
+                vertices = this.__tmpVertices;
+
+                for ( v = 0, vl = this.vertices.length; v < vl; v ++ ) {
+
+                        vertices[ v ] = new THREE.Vector3();
+
+                }
+
+                for ( f = 0, fl = this.faces.length; f < fl; f ++ ) {
+
+                        face = this.faces[ f ];
+                        face.vertexNormals = [ new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3() ];
+
+                }
+
+        } else {
+
+                vertices = this.__tmpVertices;
+
+                for ( v = 0, vl = this.vertices.length; v < vl; v ++ ) {
+
+                        vertices[ v ].set( 0, 0, 0 );
+
+                }
+
+        }
+
+        for ( f = 0, fl = this.faces.length; f < fl; f ++ ) {
+
+                face = this.faces[ f ];
+
+                vertices[ face.a ].add( face.normal );
+                vertices[ face.b ].add( face.normal );
+                vertices[ face.c ].add( face.normal );
+
+        }
+
+
+        for ( v = 0, vl = this.vertices.length; v < vl; v ++ ) {
+
+                vertices[ v ].normalize();
+
+        }
+        return vertices;
 };

@@ -20,8 +20,8 @@ app.use(express.static(__dirname + '/public'));
 // General
 
 app.get('/', site.index);
-app.get('/pcg-demo', site.pcgDemo);
+app.get('/kiwi', site.kiwi);
 app.get('/tilt', site.tiltGame);
 app.get('/tilt/:id', site.tiltGameClient);
-app.get('/favicon.ico', site.icon);
+app.use(express.favicon(__dirname + '/public/images/favicon.ico'));
 
