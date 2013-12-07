@@ -21,6 +21,7 @@ app.use(express.static(__dirname + '/public'));
 
 app.get('/', site.index);
 app.get('/kiwi', site.kiwi);
+app.get('/poem', site.poem);
 app.get('/tilt', site.tiltGame);
 app.get('/tilt/:id', site.tiltGameClient);
 app.use(express.favicon(__dirname + '/public/images/favicon.ico'));

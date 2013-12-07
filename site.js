@@ -21,6 +21,10 @@ module.exports = function(io) {
       res.render('pcg/kiwi');
     },
 
+    poem: function(req, res) {
+      res.render('poem/poem');
+    },
+
     tiltGame: function(req, res) {
       var id = makeid();
       validIds[id] = true;

@@ -86,7 +86,7 @@ THREE.Geometry.prototype.getAttachPoint = function (xMin, yMin, zMin, xMax, yMax
         var translateMat = new THREE.Matrix4().makeTranslation(finalVert.x, finalVert.y, finalVert.z);
         var xRotation = new THREE.Matrix4().makeRotationX(xAngle);
         var zRotation = new THREE.Matrix4().makeRotationZ(zAngle);
-        return translateMat.multiply(xRotation.multiply(zRotation));
+        return translateMat.multiply(zRotation.multiply(xRotation));
     }
 };
 
@@ -94,6 +94,7 @@ THREE.Mesh.prototype.addVDisplacement = function (str) {
     if (!this.displacementString)
         this.displacementString = '';
     this.displacementString += "{\n" + str + "}\n";
+    console.log(str);
     this.setMaterial();
 };
 
@@ -137,8 +138,8 @@ THREE.Mesh.prototype.setMaterial = function () {
         //     lights:true
         // });
         this.material = new THREE.ShaderMaterial ({
-            vertexShader: THREE.ShaderLib.lambert.vertexShader,
-            fragmentShader: THREE.ShaderLib.lambert.fragmentShader,
+            vertexShader: lambertVertexShader,
+            fragmentShader: this.fshader,
             uniforms: uniforms,
             lights:true
         });
