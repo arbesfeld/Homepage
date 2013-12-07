@@ -2,7 +2,7 @@ var express = require('express'),
     app = express(),
     server = require('http').createServer(app),
     io = require('socket.io').listen(server),
-    site = require('./site')(io);
+    site = require('./routes/index')(app, io);
 
 server.listen(3000);
 
@@ -19,10 +19,6 @@ app.use(express.static(__dirname + '/public'));
 
 // General
 
-app.get('/', site.index);
-app.get('/kiwi', site.kiwi);
-app.get('/poem', site.poem);
-app.get('/tilt', site.tiltGame);
-app.get('/tilt/:id', site.tiltGameClient);
 app.use(express.favicon(__dirname + '/public/images/favicon.ico'));
+
 

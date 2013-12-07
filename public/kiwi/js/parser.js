@@ -433,7 +433,7 @@ var evalScale = function (xExpr, yExpr, zExpr, env) {
 
     var curTransform = lookup(env, '#transform');
     var scaleMat = new THREE.Matrix4().makeScale(sx, sy, sz);
-    addBinding(env, '#transform', new THREE.Matrix4().multiplyMatrices(scaleMat, curTransform));
+    addBinding(env, '#transform', new THREE.Matrix4().multiplyMatrices(curTransform, scaleMat));
 };
 
 var evalRotate = function(xExpr, yExpr, zExpr, env) {
