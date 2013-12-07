@@ -1,8 +1,7 @@
 var express = require('express'),
     app = express(),
     server = require('http').createServer(app),
-    io = require('socket.io').listen(server),
-    site = require('./routes/index')(app, io);
+    io = require('socket.io').listen(server);
 
 server.listen(3000);
 
@@ -17,7 +16,10 @@ app.use(express.bodyParser());
 app.use(express.methodOverride());
 app.use(express.static(__dirname + '/public'));
 
-// General
+// Routes
+require('./routes/index')(app, io);
+
+// Icon
 
 app.use(express.favicon(__dirname + '/public/images/favicon.ico'));
 

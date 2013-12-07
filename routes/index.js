@@ -7,9 +7,9 @@ module.exports = function(app, io) {
   var kiwi = require('./kiwi');
   app.get('/kiwi', kiwi.get);
 
-  var poem = require('./poem');
-  app.get('/poem', poem.get);
-  app.post('/poem', poem.post);
+  var essay = require('./essay');
+  app.get('/poem', essay.get);
+  app.post('/poem', essay.post);
 
   var tilt = require('./tilt')(io);
   app.get('/tilt', tilt.get);

@@ -1,0 +1,26 @@
+start
+  = Paragraph+
+
+Paragraph = s:Sentence+ "\n\t"? { return {tag:"paragraph", content:s}; }
+
+Sentence
+  = w:Word+ "."? WS { return {tag:"sentence", content:w}; }
+
+Word
+  = QuotedString
+  / Text
+
+QuotedString
+  = '"' quote: (NotQuote / ".")* '"'
+  	{ return {tag:"word", quoted:true, text:quote.join("")}; }
+
+NotQuote
+  = !('"' / ".") char:.
+  	{ return char; }
+
+Text
+  = text: NotQuote+
+  	{ return {tag:"word", quoted:false, text:text.join("")}; }
+
+WS
+  = ' '*

@@ -1,0 +1,74 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <title><% title %></title>
+
+  <style>
+  /* This parent can be any width and height */
+  .block {
+    width:600px;
+    margin:0 auto;
+    text-align: center;
+  }
+  </style>
+  <link href="css/ladda.min.css" rel="stylesheet" type="text/css">
+
+  <!-- js -->
+  <script src="../js/jquery-2.0.3.min.js"></script>
+  <script src="js/spin.min.js"></script>
+  <script src="js/ladda.min.js"></script>
+
+</head>
+
+<body>
+
+  <div class="block">
+    <div id="main">
+    <form>
+      <textarea rows="40" cols="60" id="input">Liquid Swords</textarea>
+      <br>
+
+      <button class="ladda-button" data-color="mint" data-style="expand-left" id="enter">
+      </form>
+      <span class="ladda-label">Annotate</span></button>
+
+      <br>
+    </div>
+  </div>
+
+  <script>
+    var l;
+    $(document).ready(function(){
+      l = Ladda.create( document.getElementById( 'enter' ) );
+    });
+
+    $.ajaxSetup({
+
+      beforeSend:function(){
+        l.start();
+      },
+      complete:function(){
+        l.stop();
+      }
+    });
+
+    $('#enter').click(function(){
+     $.ajax({
+        url: '/poem',
+        type: 'POST',
+        cache: false,
+        data: { input:document.getElementById("input").value },
+        success: function(data) {
+          data = data.replace(/\r?\n/g, '<br>');
+          console.log(data);
+          $('#main').html(data);
+        },
+        error: function(jqXHR, textStatus, err) {
+          alert('text status '+textStatus+', err '+err)
+        }
+      })
+   });
+  </script>
+
+</body>
+</html>
