@@ -1,10 +1,15 @@
 start
   = Paragraph+
 
-Paragraph = s:Sentence+ "\n\t"? { return {tag:"paragraph", content:s}; }
+Paragraph = [\t] s:Sentence*  { return {tag:"paragraph", content:s}; }
 
 Sentence
-  = w:Word+ "."? WS { return {tag:"sentence", content:w}; }
+  = w:WordOp+ "."? WS { return {tag:"sentence", content:w}; }
+
+WordOp
+  = Word
+  / "<a>" WS a:Word WS "</a>" { return {tag:"author", author:a }; }
+  / "<t>" WS w:Word WS "</t>" { return {tag:"title", title:w }; }
 
 Word
   = QuotedString
@@ -15,7 +20,7 @@ QuotedString
   	{ return {tag:"word", quoted:true, text:quote.join("")}; }
 
 NotQuote
-  = !('"' / ".") char:.
+  = !('"' / "." / "<" / ">" / [\t]) char:.
   	{ return char; }
 
 Text

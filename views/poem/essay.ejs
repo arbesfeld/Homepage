@@ -1,73 +1,43 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title><% title %></title>
+  <title>Poem Annotator</title>
 
-  <style>
-  /* This parent can be any width and height */
-  .block {
-    width:600px;
-    margin:0 auto;
-    text-align: center;
-  }
-  </style>
+
   <link href="css/ladda.min.css" rel="stylesheet" type="text/css">
+  <link href="css/main.css" rel="stylesheet" type="text/css">
+  <link href="css/jquery-ui-1.10.3.custom.min.css" rel="stylesheet" type="text/css">
+  <link href="../css/jquery.qtip.min.css" rel="stylesheet" type="text/css">
 
   <!-- js -->
-  <script src="../js/jquery-2.0.3.min.js"></script>
-  <script src="js/spin.min.js"></script>
-  <script src="js/ladda.min.js"></script>
+  <script type="text/javascript" src="../js/jquery-1.9.1.js"></script>
+  <script type="text/javascript" src="../js/jquery.qtip.js"></script>
+  <script type="text/javascript" src="../js/jquery.color-2.1.0.min.js"></script>
+  <script type="text/javascript" src="js/jquery-ui-1.10.3.custom.js"></script>
+  <script type="text/javascript" src="../js/ejs_production.js"></script>
+  <script type="text/javascript" src="js/spin.min.js"></script>
+  <script type="text/javascript" src="js/ladda.min.js"></script>
+  <script type="text/javascript" src="js/utils.js"></script>
+  <script type="text/javascript" src="js/color_mixer.js"></script>
 
 </head>
 
 <body>
-
   <div class="block">
-    <div id="main">
-    <form>
-      <textarea rows="40" cols="60" id="input">Liquid Swords</textarea>
-      <br>
+    <div class="header">
+        <p id="header">Explicate</p>
+    </div>
 
-      <button class="ladda-button" data-color="mint" data-style="expand-left" id="enter">
-      </form>
-      <span class="ladda-label">Annotate</span></button>
+    <div class="variable" id="variable">
+        <% include main %>
+    </div>
 
-      <br>
+    <div class="footer">
+      <p>Matthew Arbesfeld</p>
     </div>
   </div>
 
-  <script>
-    var l;
-    $(document).ready(function(){
-      l = Ladda.create( document.getElementById( 'enter' ) );
-    });
-
-    $.ajaxSetup({
-
-      beforeSend:function(){
-        l.start();
-      },
-      complete:function(){
-        l.stop();
-      }
-    });
-
-    $('#enter').click(function(){
-     $.ajax({
-        url: '/poem',
-        type: 'POST',
-        cache: false,
-        data: { input:document.getElementById("input").value },
-        success: function(data) {
-          data = data.replace(/\r?\n/g, '<br>');
-          console.log(data);
-          $('#main').html(data);
-        },
-        error: function(jqXHR, textStatus, err) {
-          alert('text status '+textStatus+', err '+err)
-        }
-      })
-   });
+  <script type="text/javascript" src="js/main.js">
   </script>
 
 </body>

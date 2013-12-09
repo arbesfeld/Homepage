@@ -5,7 +5,7 @@ function lyricsSearchCb(songName, artistName, cbSuccess, cbFail) {
     if (err) {
       cbFail(err);
     } else {
-      cbSuccess(songName, artistName, lyrics.getFullLyrics(true));
+      cbSuccess(songName, artistName, lyrics.getFullLyrics(false));
     }
   };
 };

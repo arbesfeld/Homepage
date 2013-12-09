@@ -15,6 +15,7 @@ app.use(express.cookieParser());
 app.use(express.bodyParser());
 app.use(express.methodOverride());
 app.use(express.static(__dirname + '/public'));
+app.locals.pretty = true;
 
 // Routes
 require('./routes/index')(app, io);
