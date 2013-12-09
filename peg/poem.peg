@@ -10,6 +10,7 @@ WordOp
   = Word
   / "<a>" WS a:Word WS "</a>" { return {tag:"author", author:a }; }
   / "<t>" WS w:Word WS "</t>" { return {tag:"title", title:w }; }
+  / "<i>" WS w:Word WS "</i>" { return {tag:"wiki", text:w }; }
 
 Word
   = QuotedString

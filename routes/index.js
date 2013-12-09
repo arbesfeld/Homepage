@@ -9,6 +9,7 @@ module.exports = function(app, io) {
 
   var essay = require('./essay');
   app.get('/poem', essay.get);
+  app.post('/poem/search', essay.search);
   app.post('/poem', essay.post);
 
   var tilt = require('./tilt')(io);

@@ -38,6 +38,7 @@ function Model() {
     this.title = undefined;
     this.author = undefined;
     this.qtips = {};
+    this.par1 = "";
 }
 
 Model.prototype.setTitle = function(name) {
@@ -67,9 +68,15 @@ var evalParagraph = function(paragraph, paragraphNum, model) {
         throw new Error("Not paragraph.");
 
     var result = [];
+    var par1 = "";
     // paragraph is a collection of sentences
     for (var i = 0; i < paragraph.content.length; i++) {
-        result.push(evalSentence(paragraph.content[i], paragraphNum, i, model));
+        var sentence = evalSentence(paragraph.content[i], paragraphNum, i, model);
+        par1 += sentence + ". ";
+        result.push(sentence);
+    }
+    if (model.par1 === "") {
+      model.par1 = par1;
     }
     return result;
 }
@@ -87,9 +94,10 @@ var evalSentence = function(sentence, paragraphNum, sentenceNum, model) {
         item = evalItem(sentence.content[i], model);
         sentenceString += item.text;
         if (item.quoted) {
-            quotes.push(item.text.toLowerCase().trim());
+            quotes.push(item.text.toLowerCase().trim().replace( /"/g, ""));
         }
     }
+    console.log(quotes);
 
     for (var i = 0; i < quotes.length; i++) {
         var entry = model.qtips[quotes[i]];
@@ -124,6 +132,25 @@ var evalItem = function(item, model) {
     case "author":
         model.setAuthor(evalItem(item.author, model).text);
         return {quoted:false, text:model.author};
+
+    case "wiki":
+        var item = evalItem(item.text, model);
+        var text = item.text.trim().replace( /"/g, "");
+        var description = {
+          text:text,
+          url:true,
+          paragraph:-1,
+          sentence:-1
+        };
+        var entry = model.qtips[text];
+        if (!entry) {
+            entry = [];
+        }
+
+        entry.push(description);
+        model.qtips[text] = entry;
+        console.log(JSON.stringify(item));
+        return {quoted:item.quoted, text:text};
 
     case "word":
         if (item.quoted) {
