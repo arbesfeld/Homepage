@@ -1,0 +1,33 @@
+development:
+  appName: "Matthew-Arbesfeld-Server"
+  debug: false
+  slogan: "My server"
+  baseURL: "http://localhost:3000"
+  apps:
+    kiwi:
+      name: "kiwi"
+      path: "/kiwi"
+      port: 3001
+    poem:
+      name: "poem"
+      path: "/poem"
+      port: 3002
+  emailFrom: 'mata@mit.edu'
+  paginateNumber: 15
+
+production:
+  appName: "Matthew-Arbesfeld-Server"
+  debug: false
+  slogan: "My server"
+  baseURL: "http://localhost:3000"
+  apps:
+    kiwi:
+      name: "kiwi"
+      path: "/kiwi"
+      port: 3001
+    poem:
+      name: "poem"
+      path: "/poem"
+      port: 3002
+  emailFrom: 'mata@mit.edu'
+  paginateNumber: 15

@@ -1,7 +1,10 @@
 # My personal homepage. #
 =====================
 
+
 ## Works in progress: ##
 
-* _/tilt_ Use phone accelerometer to control browser WebGL content.
-* _/pcg-demo_ Procedural programming language to generate WebGL scenes.
+Uses proxy to run apps on different ports:
+
+* _/kiwi_ Procedural programming language to generate WebGL scenes.
+* _/poem_ Convert an essay into an annotated poem.
