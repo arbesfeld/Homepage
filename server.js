@@ -50,6 +50,11 @@ for (var prog in config.apps) {
   console.log("Starting server " + cur.name + " on port " + cur.port + " with path " + cur.path + ".");
 };
 
+app.use(express.static(__dirname + '/index/.html'));
+app.get('/', function (req, res) {
+  res.sendfile('index/.html/arbesfeld.com.html');
+});
+
 app.listen(3000, function() {
   console.log("Express server listening on port %d in %s mode", 3000 /*app.address().port*/, app.settings.env);
 });
