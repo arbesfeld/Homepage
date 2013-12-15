@@ -7,7 +7,8 @@
  , fs = require('fs')
  , expressValidator = require('express-validator')
  , url = require('url')
- , flash = require('connect-flash');
+ , flash = require('connect-flash')
+ , slashes = require("connect-slashes");
 
  exports.init = function(app){
  	bootApplication(app);
@@ -53,6 +54,8 @@ function bootApplication(app) {
 		app.use(express.logger(':method :url :status'));
 		app.use(express.favicon());
 		app.use("/" + app.settings.name, express.static(__dirname + '/apps/'+app.settings.name+'/app/'));
+    app.use("/" + app.settings.name + "/public", express.static(__dirname + '/public'));
+    app.use(slashes());
 
 		// // Bootstrap controllers
 		var controllers_path = __dirname + '/apps/'+app.settings.name+'/controllers';
@@ -63,9 +66,7 @@ function bootApplication(app) {
 		});
     	// routes should be at the last
     	app.use(app.router);
-
     });
-
 
   // Don't use express errorHandler as we are using custom error handlers
   // app.use(express.errorHandler({ dumpExceptions: false, showStack: false }))
