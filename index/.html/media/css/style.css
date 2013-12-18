@@ -1,10 +1,9 @@
 html {
-  background-color: #f6f6f6;  }
+  background-color: #f6f6f6; }
 
 body {
   background-color: white;
   margin: 0 auto;
-  font-family: CenturyGothic;
   width: 650px; }
   body #breadcrumbs, body #content, body #footer {
     background-color: white;
@@ -122,7 +121,7 @@ pre {
         padding: 0; }
 
 body {
-  font-family: CenturyGothic;
+  font-family: 'Helvetica Neue', Helvetica, Arial, Geneva, sans-serif;
   line-height: 21px; }
   body #breadcrumbs li {
     color: #aaa;
