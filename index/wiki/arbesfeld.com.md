@@ -11,5 +11,4 @@ Though likely not up to date, I use this site to keep track of my various ongoin
 
 ## Links
 + [Github](https://github.com/arbesfeld)
-+ [Resume](https://www.dropbox.com/s/c3xbzy6peugw56l/Matthew%20Arbesfeld%20Resume.pdf)
-
++ Resume - available upon request
