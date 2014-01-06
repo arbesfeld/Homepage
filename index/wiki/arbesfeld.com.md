@@ -2,7 +2,7 @@ Matthew Arbesfeld
 -----------------
 Hi, I'm Matt! I am currently a sophomore studying Course 6-2: Electrical Engineering and Computer Science and Course 18: Mathematics at MIT.
 
-Though likely not up to date, I use this site to keep track of my various ongoing projects. Feel free to contact me at (my last name)@gmail.com if you have any questions. (or if you know a good recipe for pad thai)
+Though likely not up to date, I use this site to keep track of my various ongoing projects. Feel free to contact me at (my last name)@gmail.com if you have any questions.
 
 ## Projects
 + [Kiwi](/kiwi) - a Javascript-based procedural modeling language
@@ -11,5 +11,4 @@ Though likely not up to date, I use this site to keep track of my various ongoin
 
 ## Links
 + [Github](https://github.com/arbesfeld)
-+ [Resume](https://www.dropbox.com/s/c3xbzy6peugw56l/Matthew%20Arbesfeld%20Resume.pdf)
-
++ Resume - available upon request
