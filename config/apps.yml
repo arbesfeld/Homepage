@@ -12,6 +12,10 @@ development:
       name: "poem"
       path: "/poem"
       port: 3002
+    marble:
+      name: "marble"
+      path: "/marble"
+      port: 3003
   emailFrom: 'mata@mit.edu'
   paginateNumber: 15
 
@@ -29,5 +33,9 @@ production:
       name: "poem"
       path: "/poem"
       port: 3002
+    marble:
+      name: "marble"
+      path: "/marble"
+      port: 3003
   emailFrom: 'mata@mit.edu'
   paginateNumber: 15
