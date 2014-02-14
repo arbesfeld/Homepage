@@ -1,0 +1,44 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+
+<html lang="en">
+<head>
+
+  <title>Hi Lydia!</title>
+  <script type="text/javascript">
+    window.addEventListener('load', onLoad, false);
+
+      function onLoad() {
+        var el  = document.createElement('canvas'),
+            ctx = el.getContext('2d');
+        el.width = el.height = 500;
+        document.body.appendChild(el);
+        draw(ctx);
+      }
+
+      function draw(ctx) {
+        ctx.strokeStyle = ctx.fillStyle = '#c22';
+        ctx.font = '30px serif';
+        ctx.fillText("Hi Lydia! Happy Valentine's Day! :)", 50, 100);
+        drawHeart(ctx, 50, 100);
+        ctx.fillText('*kiss kiss kiss*', 160, 350);
+      }
+
+      function drawHeart(ctx, x, y) {
+        x += 120;
+        y += 100;
+
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.quadraticCurveTo(x + 30,  y + 60, x + 80,  y + 100);
+        ctx.quadraticCurveTo(x + 130, y + 60, x + 160, y);
+        ctx.bezierCurveTo   (x + 200, y - 75, x + 100, y - 90, x + 80, y - 20);
+        ctx.bezierCurveTo   (x + 60,  y - 90, x - 40,  y - 75, x, y);
+        ctx.fill();
+        ctx.closePath();
+      }
+  </script>
+</head>
+
+<body>
+</body>
+</html>

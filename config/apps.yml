@@ -14,7 +14,7 @@ development:
       port: 3002
     marble:
       name: "marble"
-      path: "/marble"
+      path: "/marble|/babooshka"
       port: 3003
   emailFrom: 'mata@mit.edu'
   paginateNumber: 15
@@ -35,7 +35,7 @@ production:
       port: 3002
     marble:
       name: "marble"
-      path: "/marble"
+      path: "/marble|/babooshka"
       port: 3003
   emailFrom: 'mata@mit.edu'
   paginateNumber: 15

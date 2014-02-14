@@ -1,0 +1,7 @@
+[submodule "kiwi"]
+	path = apps/kiwi
+	url = https://github.com/arbesfeld/Kiwi.git
+
+[submodule "poem"]
+	path = apps/poem
+	url = https://github.com/arbesfeld/Poem-Annotator.git

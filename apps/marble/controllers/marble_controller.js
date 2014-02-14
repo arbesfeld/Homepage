@@ -5,4 +5,7 @@ module.exports = function (app) {
     res.render('marble');
   });
 
+  app.get('/babooshka', function (req, res) {
+    res.render('babooshka');
+  });
 }
