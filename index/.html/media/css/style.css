@@ -162,8 +162,6 @@ a {
   text-decoration: none; }
   a:hover {
     color: #4c0000; }
-  a[href^="http:"] {
-    text-decoration: underline; }
 
 dl dt {
   font-weight: bold; }
